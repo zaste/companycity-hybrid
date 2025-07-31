@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>CompanyCity - Navigate Your Business Like Never Before</title>
+   <style>
+       * {
+           margin: 0;
+           padding: 0;
+           box-sizing: border-box;
+       }
+       
+       body {
+           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+           background: #000;
+           color: #fff;
+           overflow-x: hidden;
+           line-height: 1.6;
+       }
+       
+       /* Hero Section */
+       .hero {
+           min-height: 100vh;
+           position: relative;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           background: radial-gradient(ellipse at center, #0a0a0f 0%, #000 100%);
+       }
+       
+       /* Animated City Background */
+       .city-bg {
+           position: absolute;
+           inset: 0;
+           opacity: 0.3;
+           background-image: 
+               linear-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px),
+               linear-gradient(90deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+           background-size: 50px 50px;
+           animation: grid-move 20s linear infinite;
+           transform: perspective(500px) rotateX(60deg);
+           transform-origin: center 150%;
+       }
+       
+       @keyframes grid-move {
+           0% { transform: perspective(500px) rotateX(60deg) translateZ(0); }
+           100% { transform: perspective(500px) rotateX(60deg) translateZ(50px); }
+       }
+       
+       /* Floating Particles */
+       .particles {
+           position: absolute;
+           inset: 0;
+           overflow: hidden;
+       }
+       
+       .particle {
+           position: absolute;
+           width: 4px;
+           height: 4px;
+           background: #8b5cf6;
+           border-radius: 50%;
+           opacity: 0.8;
+           animation: float-up 15s linear infinite;
+       }
+       
+       @keyframes float-up {
+           0% {
+               transform: translateY(100vh) translateX(0);
+               opacity: 0;
+           }
+           10% {
+               opacity: 0.8;
+           }
+           90% {
+               opacity: 0.8;
+           }
+           100% {
+               transform: translateY(-100vh) translateX(100px);
+               opacity: 0;
+           }
+       }
+       
+       /* Content Container */
+       .hero-content {
+           position: relative;
+           z-index: 10;
+           max-width: 1200px;
+           margin: 0 auto;
+           padding: 2rem;
+           text-align: center;
+       }
+       
+       /* Logo */
+       .logo {
+           display: inline-flex;
+           align-items: center;
+           gap: 0.5rem;
+           margin-bottom: 2rem;
+           font-size: 1.5rem;
+           font-weight: 700;
+           color: #8b5cf6;
+           text-decoration: none;
+       }
+       
+       .logo-icon {
+           width: 40px;
+           height: 40px;
+           background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+           border-radius: 8px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           font-size: 1.5rem;
+       }
+       
+       /* Headlines */
+       h1 {
+           font-size: clamp(3rem, 8vw, 5.5rem);
+           font-weight: 800;
+           letter-spacing: -0.03em;
+           margin-bottom: 1.5rem;
+           background: linear-gradient(135deg, #fff 0%, #8b5cf6 100%);
+           -webkit-background-clip: text;
+           -webkit-text-fill-color: transparent;
+           background-clip: text;
+           line-height: 1.1;
+       }
+       
+       .subtitle {
+           font-size: clamp(1.25rem, 3vw, 1.75rem);
+           color: #a1a1aa;
+           margin-bottom: 3rem;
+           font-weight: 400;
+           max-width: 800px;
+           margin-left: auto;
+           margin-right: auto;
+       }
+       
+       /* Navigation Path */
+       .nav-path {
+           display: inline-flex;
+           align-items: center;
+           gap: 0.75rem;
+           padding: 1rem 1.5rem;
+           background: rgba(139, 92, 246, 0.1);
+           border: 1px solid rgba(139, 92, 246, 0.3);
+           border-radius: 100px;
+           margin-bottom: 3rem;
+           font-size: 0.875rem;
+           font-family: 'SF Mono', 'Monaco', monospace;
+           color: #8b5cf6;
+           position: relative;
+           overflow: hidden;
+       }
+       
+       .nav-path::before {
+           content: '';
+           position: absolute;
+           top: 50%;
+           left: -100%;
+           width: 100%;
+           height: 1px;
+           background: linear-gradient(90deg, transparent, #8b5cf6, transparent);
+           animation: scan 3s ease-in-out infinite;
+       }
+       
+       @keyframes scan {
+           0% { left: -100%; }
+           100% { left: 100%; }
+       }
+       
+       .nav-arrow {
+           color: #6d28d9;
+       }
+       
+       /* CTA Buttons */
+       .cta-group {
+           display: flex;
+           gap: 1rem;
+           justify-content: center;
+           margin-bottom: 4rem;
+           flex-wrap: wrap;
+       }
+       
+       .btn {
+           padding: 0.875rem 2rem;
+           border-radius: 8px;
+           font-weight: 600;
+           text-decoration: none;
+           transition: all 0.2s;
+           display: inline-flex;
+           align-items: center;
+           gap: 0.5rem;
+           font-size: 1.125rem;
+           position: relative;
+           overflow: hidden;
+       }
+       
+       .btn-primary {
+           background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+           color: white;
+           border: 2px solid transparent;
+       }
+       
+       .btn-primary:hover {
+           transform: translateY(-2px);
+           box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+       }
+       
+       .btn-secondary {
+           background: transparent;
+           color: #8b5cf6;
+           border: 2px solid rgba(139, 92, 246, 0.3);
+       }
+       
+       .btn-secondary:hover {
+           background: rgba(139, 92, 246, 0.1);
+           border-color: #8b5cf6;
+       }
+       
+       /* Feature Grid */
+       .features {
+           display: grid;
+           grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+           gap: 2rem;
+           margin-bottom: 4rem;
+       }
+       
+       .feature {
+           padding: 2rem;
+           background: rgba(139, 92, 246, 0.05);
+           border: 1px solid rgba(139, 92, 246, 0.2);
+           border-radius: 12px;
+           transition: all 0.3s;
+       }
+       
+       .feature:hover {
+           background: rgba(139, 92, 246, 0.1);
+           border-color: rgba(139, 92, 246, 0.4);
+           transform: translateY(-4px);
+       }
+       
+       .feature-icon {
+           font-size: 2rem;
+           margin-bottom: 1rem;
+       }
+       
+       .feature-title {
+           font-size: 1.25rem;
+           font-weight: 700;
+           margin-bottom: 0.5rem;
+           color: #fff;
+       }
+       
+       .feature-desc {
+           color: #a1a1aa;
+           font-size: 0.95rem;
+           line-height: 1.6;
+       }
+       
+       /* Stats */
+       .stats {
+           display: grid;
+           grid-template-columns: repeat(4, 1fr);
+           gap: 2rem;
+           margin-bottom: 4rem;
+           text-align: center;
+       }
+       
+       .stat {
+           padding: 1.5rem;
+       }
+       
+       .stat-number {
+           font-size: 3rem;
+           font-weight: 800;
+           color: #8b5cf6;
+           margin-bottom: 0.5rem;
+       }
+       
+       .stat-label {
+           color: #a1a1aa;
+           font-size: 0.875rem;
+           text-transform: uppercase;
+           letter-spacing: 0.1em;
+       }
+       
+       /* Testimonial */
+       .testimonial {
+           max-width: 800px;
+           margin: 0 auto 4rem;
+           padding: 2rem;
+           background: rgba(139, 92, 246, 0.05);
+           border-left: 4px solid #8b5cf6;
+           border-radius: 8px;
+       }
+       
+       .testimonial-text {
+           font-size: 1.25rem;
+           font-style: italic;
+           margin-bottom: 1rem;
+           color: #e4e4e7;
+       }
+       
+       .testimonial-author {
+           color: #a1a1aa;
+           font-size: 0.875rem;
+       }
+       
+       /* Responsive */
+       @media (max-width: 768px) {
+           .stats {
+               grid-template-columns: repeat(2, 1fr);
+           }
+           
+           .nav-path {
+               font-size: 0.75rem;
+               padding: 0.75rem 1rem;
+           }
+           
+           .features {
+               grid-template-columns: 1fr;
+           }
+       }
+       
+       /* 3D Building Animation */
+       .building-3d {
+           width: 100px;
+           height: 120px;
+           margin: 2rem auto;
+           position: relative;
+           transform-style: preserve-3d;
+           animation: rotate-building 20s linear infinite;
+       }
+       
+       @keyframes rotate-building {
+           0% { transform: rotateY(0deg); }
+           100% { transform: rotateY(360deg); }
+       }
+       
+       .building-face {
+           position: absolute;
+           width: 100px;
+           height: 120px;
+           background: linear-gradient(180deg, rgba(139, 92, 246, 0.3), rgba(139, 92, 246, 0.1));
+           border: 1px solid rgba(139, 92, 246, 0.5);
+       }
+       
+       .building-face.front { transform: translateZ(50px); }
+       .building-face.back { transform: rotateY(180deg) translateZ(50px); }
+       .building-face.left { transform: rotateY(-90deg) translateZ(50px); }
+       .building-face.right { transform: rotateY(90deg) translateZ(50px); }
+   </style>
+</head>
+<body>
+   <section class="hero">
+       <!-- Animated Background -->
+       <div class="city-bg"></div>
+       <div class="particles" id="particles"></div>
+       
+       <!-- Main Content -->
+       <div class="hero-content">
+           <!-- Logo -->
+           <a href="#" class="logo">
+               <div class="logo-icon">🏙️</div>
+               <span>CompanyCity</span>
+           </a>
+           
+           <!-- Headlines -->
+           <h1>Navigate Your Business<br>Like Never Before</h1>
+           
+           <p class="subtitle">
+               Transform overwhelming complexity into an intuitive 3D city. 
+               See everything. Understand instantly. Act decisively.
+           </p>
+           
+           <!-- Navigation Demo -->
+           <div class="nav-path">
+               <span>Market View</span>
+               <span class="nav-arrow">→</span>
+               <span>Your Company</span>
+               <span class="nav-arrow">→</span>
+               <span>Sales District</span>
+               <span class="nav-arrow">→</span>
+               <span>Lead Building</span>
+               <span class="nav-arrow">→</span>
+               <span>Problem Found</span>
+               <span class="nav-arrow">→</span>
+               <span style="color: #10b981">✓ Solved</span>
+           </div>
+           
+           <!-- CTA Buttons -->
+           <div class="cta-group">
+               <a href="#" class="btn btn-primary">
+                   Start Free Trial
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                       <path d="M5 12h14M12 5l7 7-7 7"/>
+                   </svg>
+               </a>
+               <a href="#" class="btn btn-secondary">
+                   Watch 2-Min Demo
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                       <path d="M8 5v14l11-7z"/>
+                   </svg>
+               </a>
+           </div>
+           
+           <!-- 3D Building -->
+           <div class="building-3d">
+               <div class="building-face front"></div>
+               <div class="building-face back"></div>
+               <div class="building-face left"></div>
+               <div class="building-face right"></div>
+           </div>
+           
+           <!-- Feature Grid -->
+           <div class="features">
+               <div class="feature">
+                   <div class="feature-icon">🔍</div>
+                   <h3 class="feature-title">Zoom Bidirectional</h3>
+                   <p class="feature-desc">From global market view to individual task details. Navigate out for context, in for action.</p>
+               </div>
+               <div class="feature">
+                   <div class="feature-icon">⚡</div>
+                   <h3 class="feature-title">Real-Time Everything</h3>
+                   <p class="feature-desc">Live data flows through your city. See bottlenecks form and resolve them instantly.</p>
+               </div>
+               <div class="feature">
+                   <div class="feature-icon">🎯</div>
+                   <h3 class="feature-title">12 Specialized Views</h3>
+                   <p class="feature-desc">Process flows, org charts, system maps, financials—all in one navigable space.</p>
+               </div>
+           </div>
+           
+           <!-- Stats -->
+           <div class="stats">
+               <div class="stat">
+                   <div class="stat-number">73%</div>
+                   <div class="stat-label">Faster Resolution</div>
+               </div>
+               <div class="stat">
+                   <div class="stat-number">91%</div>
+                   <div class="stat-label">User Adoption</div>
+               </div>
+               <div class="stat">
+                   <div class="stat-number">5min</div>
+                   <div class="stat-label">Onboarding Time</div>
+               </div>
+               <div class="stat">
+                   <div class="stat-number">∞</div>
+                   <div class="stat-label">Dashboards Replaced</div>
+               </div>
+           </div>
+           
+           <!-- Testimonial -->
+           <div class="testimonial">
+               <p class="testimonial-text">
+                   "It's like SimCity met Google Maps and had a baby with our entire tech stack. But actually useful."
+               </p>
+               <p class="testimonial-author">
+                   — CTO, Fortune 500 Retail Company
+               </p>
+           </div>
+           
+           <!-- Final CTA -->
+           <p style="color: #a1a1aa; margin-bottom: 2rem;">
+               Stop drowning in dashboards. Start navigating your business.
+           </p>
+           
+           <a href="#" class="btn btn-primary" style="font-size: 1.25rem; padding: 1rem 3rem;">
+               Build Your City Now
+               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                   <path d="M5 12h14M12 5l7 7-7 7"/>
+               </svg>
+           </a>
+       </div>
+   </section>
+   
+   <script>
+       // Generate floating particles
+       const particlesContainer = document.getElementById('particles');
+       for (let i = 0; i < 50; i++) {
+           const particle = document.createElement('div');
+           particle.className = 'particle';
+           particle.style.left = Math.random() * 100 + '%';
+           particle.style.animationDelay = Math.random() * 15 + 's';
+           particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+           
+           // Vary particle colors
+           const colors = ['#8b5cf6', '#6d28d9', '#a78bfa', '#c4b5fd'];
+           particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+           
+           particlesContainer.appendChild(particle);
+       }
+       
+       // Smooth scroll for CTA buttons
+       document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+           anchor.addEventListener('click', function (e) {
+               e.preventDefault();
+               const target = document.querySelector(this.getAttribute('href'));
+               if (target) {
+                   target.scrollIntoView({ behavior: 'smooth' });
+               }
+           });
+       });
+       
+       // Add hover effect to nav path items
+       const navPath = document.querySelector('.nav-path');
+       const navItems = navPath.querySelectorAll('span:not(.nav-arrow)');
+       
+       navItems.forEach((item, index) => {
+           item.style.cursor = 'pointer';
+           item.addEventListener('mouseenter', () => {
+               item.style.color = '#fff';
+               item.style.transform = 'scale(1.1)';
+           });
+           item.addEventListener('mouseleave', () => {
+               item.style.color = '#8b5cf6';
+               item.style.transform = 'scale(1)';
+           });
+       });
+   </script>
+</body>
+</html>
