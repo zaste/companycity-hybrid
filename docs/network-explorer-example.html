@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CompanyCity – Ecosystem Explorer</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#050510; color:#fff; font-family: sans-serif; overflow:hidden; cursor:grab; }
+    body.grabbing { cursor:grabbing; }
+    #container { position:relative; width:100vw; height:100vh; }
+    #ui-layer { position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:10; }
+    /* Breadcrumb navigation */
+    #nav { position:absolute; top:20px; left:20px; background:rgba(0,0,0,0.7); border:1px solid rgba(139,92,246,0.3); border-radius:10px; padding:10px 14px; font-size:13px; pointer-events:auto; }
+    .breadcrumb { display:flex; align-items:center; gap:6px; }
+    .breadcrumb-item { cursor:pointer; color:#aaa; transition:color 0.2s; }
+    .breadcrumb-item:hover { color:#8b5cf6; }
+    .breadcrumb-current { color:#fff; font-weight:bold; }
+    #hud {
+      position:absolute;
+      top:auto;
+      right:20px;
+      bottom:20px;
+      background:rgba(0,0,0,0.85);
+      border:1px solid rgba(139,92,246,0.4);
+      border-radius:12px;
+      padding:14px;
+      min-width:200px;
+      pointer-events:auto;
+      display:none;
+      box-shadow:0 0 30px rgba(0,0,0,0.5);
+    }
+    #hud.visible { display:block; }
+    #hud .title { font-size:12px; color:#8b8b8b; text-transform:uppercase; margin-bottom:8px; }
+    #hud .metric { display:flex; justify-content:space-between; margin-bottom:4px; font-size:12px; }
+    #hud .metric-label { color:#888; }
+    #hud .metric-value { color:#8b5cf6; font-weight:bold; }
+
+    /* District labels for company view */
+    .district-label {
+      position:absolute;
+      color:#fdfdfd;
+      font-size:13px;
+      font-weight:600;
+      letter-spacing:1.2px;
+      text-transform:uppercase;
+      pointer-events:none;
+      text-shadow:0 0 6px rgba(0,0,0,0.7), 0 0 12px rgba(139,92,246,0.4);
+      transform:translate(-50%, -120%);
+    }
+    /* Accessibility overlay */
+    .a11y-node {
+      position:absolute;
+      width:50px;
+      height:50px;
+      transform:translate(-50%, -50%);
+      outline:none;
+      background:transparent;
+      border:none;
+      cursor:pointer;
+      pointer-events:auto;
+      z-index:1000;
+    }
+
+    /* System overview panel similar to the reference example */
+    #system-overview {
+      position:absolute;
+      top:20px;
+      right:20px;
+      background:rgba(0,0,0,0.8);
+      border:1px solid rgba(139,92,246,0.3);
+      border-radius:12px;
+      padding:12px 16px;
+      min-width:150px;
+      font-size:12px;
+      line-height:1.4;
+      pointer-events:none;
+      box-shadow:0 0 20px rgba(0,0,0,0.5);
+    }
+    #system-overview .row {
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:4px;
+      color:#aaa;
+    }
+    #system-overview .row:last-child { margin-bottom:0; }
+    #system-overview .value {
+      color:#8b5cf6;
+      font-weight:bold;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <div id="container">
+    <div id="ui-layer">
+      <nav id="nav">
+        <div class="breadcrumb">
+          <span class="breadcrumb-item" data-level="ecosystem">Ecosystem</span>
+          <span class="breadcrumb-sep" style="display:none">›</span>
+          <span class="breadcrumb-current" id="breadcrumb-current"></span>
+        </div>
+      </nav>
+      <!-- HUD for metrics and details -->
+      <div id="hud">
+        <div class="title" id="hud-title"></div>
+        <div id="hud-content"></div>
+      </div>
+        <!-- System overview panel mimicking the example UI (static values) -->
+        <div id="system-overview">
+          <div class="row" id="metric-1"><span class="label">Active Districts</span><span class="value">6</span></div>
+          <div class="row" id="metric-2"><span class="label">Total Processes</span><span class="value">27</span></div>
+          <div class="row" id="metric-3"><span class="label">Data Flow Rate</span><span class="value">2763/s</span></div>
+          <div class="row" id="metric-4"><span class="label">System Health</span><span class="value">98%</span></div>
+        </div>
+    </div>
+  </div>
+  <script>
+    // Data definitions: single company with districts and buildings
+    const companyData = {
+      id: 'cocacola',
+      name: 'Coca‑Cola',
+      // core color for the company centre (purple accent)
+      color: 0x8b5cf6,
+      // Districts aligned with the specification: Market, Delivery, Finance, People, Technology, Governance
+      districts: [
+        {
+          id: 'market',
+          name: 'Market',
+          color: 0x2ecc71, // green
+          buildings: ['Awareness','Interest','Consideration','Purchase','Retention','Advocacy']
+        },
+        {
+          id: 'delivery',
+          name: 'Delivery',
+          color: 0xe67e22, // orange
+          buildings: ['Design','Build','Test','Deploy','Monitor','Iterate']
+        },
+        {
+          id: 'finance',
+          name: 'Finance',
+          color: 0xf1c40f, // yellow
+          buildings: ['Planning','Collection','Management','Reporting','Analysis','Control']
+        },
+        {
+          id: 'people',
+          name: 'People',
+          color: 0x3498db, // blue
+          buildings: ['Attract','Select','Develop','Engage','Perform','Transition']
+        },
+        {
+          id: 'technology',
+          name: 'Technology',
+          color: 0x9b59b6, // purple
+          buildings: ['Infrastructure','Security','Development','Support','Data','Integration']
+        },
+        {
+          id: 'governance',
+          name: 'Governance',
+          color: 0xe74c3c, // red
+          buildings: ['Policy','Review','Approval','Documentation','Monitoring','Remediation']
+        }
+      ]
+    };
+
+    // Global state
+    const state = {
+      // Start at the company view by default (ecosystem collapses into single company)
+      level:'company', // company, district, building, module, element
+      selectedCompany: companyData,
+      selectedDistrict:null,
+      selectedBuilding:null,
+      selectedModule:null,
+      selectedElement:null,
+      currentModules:[]
+    };
+
+    // Three.js scene setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050510);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 1000);
+    // Camera parameters: angle (vertical tilt) and distance from origin
+    let camAngle = 0.6; // radians; controls the elevation angle (~34°)
+    let cameraDistance = 180; // distance from the center
+    function updateCamera() {
+      camera.position.set(0, Math.sin(camAngle) * cameraDistance, Math.cos(camAngle) * cameraDistance);
+      camera.lookAt(0,0,0);
+    }
+    updateCamera();
+    const renderer = new THREE.WebGLRenderer({ antialias:true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('container').appendChild(renderer.domElement);
+    // Lights
+    const ambient = new THREE.AmbientLight(0x404040, 0.6);
+    scene.add(ambient);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.7);
+    dir.position.set(100,200,100);
+    scene.add(dir);
+    // Groups
+    const companyGroup = new THREE.Group(); // company base and districts
+    const districtGroup = new THREE.Group(); // districts (same as companyGroup for backward compatibility)
+    const buildingGroup = new THREE.Group(); // buildings within a district
+    scene.add(companyGroup);
+    scene.add(districtGroup);
+    scene.add(buildingGroup);
+    // Flows connecting central to each district in city view
+    const centralFlows = [];
+    // Flows moving around a district ring in network view
+    const networkFlows = [];
+
+    // Network group: used to display the circular network view for a selected district
+    const networkGroup = new THREE.Group();
+    scene.add(networkGroup);
+
+    // Ground grid group to hold the hex pattern lines. This will be
+    // populated by createGrid(). A separate cylindrical backdrop is
+    // added later to create the immersive honeycomb environment.
+    const gridGroup = new THREE.Group();
+    scene.add(gridGroup);
+
+    /**
+     * Create a subtle hexagonal grid on the ground. This uses axial coordinates
+     * to layout hexagons and draws their outlines as line segments. The grid is
+     * decorative and mimics the reference example.
+     */
+    function createGrid() {
+      const cellRadius = GRID_CELL_RADIUS; // radius of each hex cell
+      const rings = 4;       // how many rings around the center
+      const positions = [];
+      // Helper to generate a hex outline around a center
+      function addHex(centerX, centerZ) {
+        for(let i=0;i<6;i++){
+          const angle1 = (Math.PI/3) * i;
+          const angle2 = angle1 + Math.PI/3;
+          const x1 = centerX + cellRadius * Math.cos(angle1);
+          const z1 = centerZ + cellRadius * Math.sin(angle1);
+          const x2 = centerX + cellRadius * Math.cos(angle2);
+          const z2 = centerZ + cellRadius * Math.sin(angle2);
+          positions.push(x1,0.1,z1, x2,0.1,z2);
+        }
+      }
+      // axial coordinate to cartesian
+      function axialToCartesian(q,r) {
+        const x = cellRadius * 1.5 * q;
+        const z = cellRadius * Math.sqrt(3) * (r + q/2);
+        return {x,z};
+      }
+      // generate cells within rings radius
+      for(let q=-rings; q<=rings; q++){
+        for(let r=-rings; r<=rings; r++){
+          const s = -q-r;
+          if(Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= rings) {
+            const {x,z} = axialToCartesian(q,r);
+            addHex(x,z);
+          }
+        }
+      }
+      const gridGeometry = new THREE.BufferGeometry();
+      gridGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      const gridMaterial = new THREE.LineBasicMaterial({ color: 0x27264a, transparent:true, opacity:0.6 });
+      const gridLines = new THREE.LineSegments(gridGeometry, gridMaterial);
+      gridLines.rotation.x = -Math.PI/2; // align to ground plane
+      // Place the grid lines into a container. We do not rotate the grid
+      // here; the background honeycomb effect is handled by a separate
+      // cylindrical backdrop created in createBackgroundCylinder().
+      const gridContainer = new THREE.Group();
+      gridContainer.add(gridLines);
+      gridGroup.add(gridContainer);
+    }
+
+    /**
+     * Create a large cylindrical backdrop with a subtle honeycomb pattern.
+     * The pattern is drawn to an off‑screen canvas then used as a repeating
+     * texture on the inside of a cylinder. This gives the impression of
+     * being surrounded by a hive structure, similar to the example.
+     */
+    function createBackgroundCylinder() {
+      // Canvas size for the hex pattern texture
+      const texSize = 512;
+      const canvas = document.createElement('canvas');
+      canvas.width = texSize;
+      canvas.height = texSize;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, texSize, texSize);
+      // Stroke style for the hex lines (semi‑transparent)
+      // Lighter stroke for better visibility on the cylinder. Adjust
+      // colour and opacity to taste.
+      ctx.strokeStyle = 'rgba(80,80,120,0.5)';
+      ctx.lineWidth = 1;
+      // Axial to pixel conversion for pointy‑top hexes
+      // Increase the cell radius to reduce the density of the pattern on
+      // the backdrop. Larger cells are easier to discern at a distance.
+      const cellRadiusPx = texSize / 8;
+      function axialToPixel(q, r) {
+        const x = cellRadiusPx * Math.sqrt(3) * (q + r / 2);
+        const y = cellRadiusPx * 1.5 * r;
+        return { x: x + texSize / 2, y: y + texSize / 2 };
+      }
+      // Draw a hexagon outline at pixel coordinate
+      function drawHex(x, y) {
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI / 3) * i + Math.PI / 6;
+          const px = x + cellRadiusPx * Math.cos(angle);
+          const py = y + cellRadiusPx * Math.sin(angle);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+      // Draw multiple hex cells on the canvas
+      const range = 6;
+      for (let q = -range; q <= range; q++) {
+        for (let r = -range; r <= range; r++) {
+          const { x, y } = axialToPixel(q, r);
+          drawHex(x, y);
+        }
+      }
+      // Create texture
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      // Repeat fewer times so the pattern appears larger on the
+      // cylinder. Adjusting repeat values changes how many times the
+      // texture tiles around the circumference and height.
+      texture.repeat.set(2, 2);
+      // Cylinder geometry
+      const radius = 200;
+      const height = 200;
+      const radialSegments = 64;
+      const heightSegments = 1;
+      const cylGeom = new THREE.CylinderGeometry(radius, radius, height, radialSegments, heightSegments, true);
+      const cylMat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide, transparent: true, opacity: 0.35 });
+      const cylinder = new THREE.Mesh(cylGeom, cylMat);
+      // Elevate the cylinder slightly so it surrounds the city
+      cylinder.position.y = height / 2 - 5;
+      scene.add(cylinder);
+    }
+
+    // Keep track of district labels (DOM elements) for positioning
+    const districtLabels = [];
+
+    // Keep track of labels for network nodes so they can be removed when exiting network view
+    const networkLabels = [];
+
+    // Grid cell radius used for background hex pattern and to align district positions.
+    // Reduced from 20 to 15 to make the honeycomb cells smaller relative to
+    // the city elements. A smaller grid helps visually match the example
+    // where the cells are more fine‑grained.
+    const GRID_CELL_RADIUS = 15;
+
+    // Derived constants to align the company and district hexagons with the
+    // underlying hex grid. We scale the central base relative to the grid
+    // cell and shrink the district bases accordingly.
+    const CENTRAL_RADIUS = GRID_CELL_RADIUS * 1.2;        // ~18 when cell is 15
+    const DISTRICT_BASE_RADIUS = GRID_CELL_RADIUS * 0.6;  // ~9 when cell is 15
+
+    // Compute a multiplier to space the six district centres outward from
+    // the origin. Without scaling, the axial coordinates (1,0), (1,-1), …
+    // produce positions at radius ≈ 1.732 * GRID_CELL_RADIUS (≈34.64). We
+    // want the districts to sit at roughly 40 units from the centre (similar
+    // to the previous design), so compute a factor accordingly.
+    const TARGET_DIST = 40;
+    // Calculate the distance from the origin to the centre of a ring‑2 cell
+    // (q=2,r=0). This provides a baseline for scaling the positions of
+    // districts so they sit roughly 40 units away from the centre.
+    const baseDist = Math.sqrt(
+      Math.pow(1.5 * GRID_CELL_RADIUS * 2, 2) +
+      Math.pow(Math.sqrt(3) * (0 + 2 / 2) * GRID_CELL_RADIUS, 2)
+    );
+    const DISTANCE_MULTIPLIER = TARGET_DIST / baseDist;
+
+    // Axial coordinates for the six district positions. To place each
+    // district further out on the hex grid (two rings away) and centered
+    // on individual grid cells, we choose axial coordinates on ring 2.
+    // The order corresponds to the order of districts in companyData.districts
+    // (Market, Delivery, Finance, People, Technology, Governance).
+    const axialCoords = [
+      { q: 2,  r: 0 },   // 0 – Market
+      { q: 2,  r: -2 },  // 1 – Delivery
+      { q: 0,  r: -2 },  // 2 – Finance
+      { q: -2, r: 0 },   // 3 – People
+      { q: -2, r: 2 },   // 4 – Technology
+      { q: 0,  r: 2 }    // 5 – Governance
+    ];
+
+    // Create central glow and ring effects around the company
+    function addCentralEffects(color) {
+      // Remove previous central effects if any
+      const existingGlow = companyGroup.getObjectByName('centralGlow');
+      if (existingGlow) companyGroup.remove(existingGlow);
+      const existingRing = companyGroup.getObjectByName('centralRing');
+      if (existingRing) companyGroup.remove(existingRing);
+      // Glow disc slightly larger than the central hex. Tie the size of
+      // the glow and pulsing ring to the configurable central radius so that
+      // these elements remain aligned with the base hex.
+      const glowRadius = CENTRAL_RADIUS + 2;
+      const glowGeom = new THREE.CircleGeometry(glowRadius, 32);
+      const glowMat = new THREE.MeshBasicMaterial({ color: color, transparent:true, opacity: 0.08 });
+      const glow = new THREE.Mesh(glowGeom, glowMat);
+      glow.name = 'centralGlow';
+      glow.rotation.x = -Math.PI/2;
+      glow.position.set(0, 0.5, 0);
+      companyGroup.add(glow);
+      // Pulsing ring around the central hex. Slightly outside the glow disc.
+      const ringInner = CENTRAL_RADIUS + 5;
+      const ringOuter = CENTRAL_RADIUS + 7;
+      const ringGeom = new THREE.RingGeometry(ringInner, ringOuter, 64);
+      const ringMat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+      const ring = new THREE.Mesh(ringGeom, ringMat);
+      ring.name = 'centralRing';
+      ring.rotation.x = -Math.PI/2;
+      ring.position.set(0, 0.6, 0);
+      companyGroup.add(ring);
+    }
+
+    // Helper: create hexagonal prism for companies and districts
+    function createHexPrism(radius,height,color) {
+      /*
+       * Create an upright hexagonal prism with one vertex pointing towards
+       * the positive Z direction. We generate the hexagon shape with a
+       * 30° phase shift so that its "pointy" end aligns with the intended
+       * orientation. The extruded geometry is wrapped in a group so that it
+       * can be rotated around the Y axis without introducing tilt. This
+       * wrapper approach avoids the gimbal effect observed when directly
+       * applying successive Euler rotations to a single mesh.
+       */
+      const shape = new THREE.Shape();
+      for (let i = 0; i < 6; i++) {
+        // Generate a pointy‑top hexagon by adding a 30° phase shift. In
+        // a pointy orientation one vertex aligns with the positive Z axis.
+        // This orientation better matches the reference example where the
+        // honeycomb grid appears rotated and the city hexes share the
+        // same alignment. A 30° shift positions a vertex at the top.
+        // Use a flat‑top orientation by removing the 30° phase shift.
+        // In a flat‑top hexagon the top and bottom edges are horizontal and
+        // align with the grid. This orientation matches the specification
+        // and helps prevent towers from appearing tilted relative to the
+        // ground.
+        const angle = (Math.PI / 3) * i;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        if (i === 0) shape.moveTo(x, y);
+        else shape.lineTo(x, y);
+      }
+      shape.closePath();
+      const extrude = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });
+      const material = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.1, transparent: true, opacity: 0.9 });
+      // Create the prism mesh
+      const prism = new THREE.Mesh(extrude, material);
+      // Add glowing edges
+      const edgeGeom = new THREE.EdgesGeometry(extrude);
+      const edgeMat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.35 });
+      const edges = new THREE.LineSegments(edgeGeom, edgeMat);
+      prism.add(edges);
+      // Rotate the prism so that its height axis aligns with the Y axis
+      prism.rotation.x = -Math.PI / 2;
+      // Wrap the prism in a group; rotate this group instead of the mesh
+      const group = new THREE.Group();
+      group.add(prism);
+      // Lift the group slightly above the ground plane so it sits on the grid
+      group.position.y = 1;
+      return group;
+    }
+
+    /**
+     * Create a cluster of towers inside the company centre. Each tower is a simple
+     * box with a height scaled randomly to add variation. They are added to
+     * companyGroup so they rotate along with the view.
+     */
+    function addCentralTowers(color) {
+      // Remove existing towers if present
+      const existing = companyGroup.getObjectByName('centralTowers');
+      if(existing) companyGroup.remove(existing);
+      const group = new THREE.Group();
+      group.name = 'centralTowers';
+      for(let i=0;i<4;i++){
+        const h = 6 + Math.random()*8;
+        const geom = new THREE.BoxGeometry(3, h, 3);
+        const mat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.2 });
+        const tower = new THREE.Mesh(geom, mat);
+        // Random position within radius 6
+        const angle = Math.random()*Math.PI*2;
+        const radius = 4 + Math.random()*3;
+        const x = Math.cos(angle)*radius;
+        const z = Math.sin(angle)*radius;
+        tower.position.set(x, h/2 + 1, z);
+        group.add(tower);
+      }
+      companyGroup.add(group);
+    }
+
+    /**
+     * Create a cluster of towers inside a district hex. Towers are small boxes
+     * positioned randomly within the hex footprint. They are added as a child
+     * of the district mesh so they follow its rotation.
+     */
+    function addDistrictTowers(districtMesh, district) {
+      // remove previous towers if any
+      const existing = districtMesh.getObjectByName('districtTowers');
+      if(existing) districtMesh.remove(existing);
+      const group = new THREE.Group();
+      group.name = 'districtTowers';
+      for(let i=0;i<4;i++){
+        const h = 4 + Math.random()*6;
+        const geom = new THREE.BoxGeometry(2, h, 2);
+        const mat = new THREE.MeshPhongMaterial({ color: district.color, emissive: district.color, emissiveIntensity: 0.15 });
+        const tower = new THREE.Mesh(geom, mat);
+        // random position inside a radius of 5 around centre
+        const angle = Math.random()*Math.PI*2;
+        const radius = 3 + Math.random()*2;
+        const x = Math.cos(angle)*radius;
+        const z = Math.sin(angle)*radius;
+        tower.position.set(x, h/2 + 1, z);
+        group.add(tower);
+      }
+      districtMesh.add(group);
+    }
+
+    /**
+     * Update the system overview panel with context-specific metrics. In company view
+     * it shows counts for districts and processes; in district/network view it shows
+     * counts for nodes and connections. Metrics are approximate for demonstration.
+     */
+    function updateSystemOverview(options) {
+      const panel = document.getElementById('system-overview');
+      const rows = {
+        active: panel.querySelector('#metric-1'),
+        processes: panel.querySelector('#metric-2'),
+        flow: panel.querySelector('#metric-3'),
+        health: panel.querySelector('#metric-4'),
+      };
+      if(options.view === 'company') {
+        rows.active.querySelector('.label').textContent = 'Active Districts';
+        rows.active.querySelector('.value').textContent = options.activeDistricts;
+        rows.processes.querySelector('.label').textContent = 'Total Buildings';
+        rows.processes.querySelector('.value').textContent = options.totalBuildings;
+        rows.flow.querySelector('.label').textContent = 'Data Flow Rate';
+        rows.flow.querySelector('.value').textContent = `${options.flowRate}/s`;
+        rows.health.querySelector('.label').textContent = 'System Health';
+        rows.health.querySelector('.value').textContent = `${options.health}%`;
+      } else if(options.view === 'network') {
+        rows.active.querySelector('.label').textContent = 'Active Nodes';
+        rows.active.querySelector('.value').textContent = options.activeNodes;
+        rows.processes.querySelector('.label').textContent = 'Connections';
+        rows.processes.querySelector('.value').textContent = options.connections;
+        rows.flow.querySelector('.label').textContent = 'Throughput';
+        rows.flow.querySelector('.value').textContent = `${options.throughput} msgs/s`;
+        rows.health.querySelector('.label').textContent = 'Latency';
+        rows.health.querySelector('.value').textContent = `${options.latency}ms`;
+      }
+    }
+
+    /**
+     * Create animated flows from the central platform to each district. These flows
+     * are small spheres that move along a curved path, giving the impression of
+     * data moving between the core and the districts. All flows are stored in
+     * centralFlows so they can be updated each frame and removed when the view changes.
+     */
+    function createCentralFlows() {
+      // Remove previous flow meshes from the scene
+      centralFlows.forEach(f => {
+        companyGroup.remove(f.mesh);
+      });
+      centralFlows.length = 0;
+      // Only create flows in company view
+      if (state.level !== 'company') return;
+      const districts = companyData.districts;
+      districts.forEach((district, i) => {
+        // find the district mesh in companyGroup
+        let mesh = null;
+        companyGroup.children.forEach(child => {
+          if(child.userData && child.userData.district && child.userData.district.id === district.id) {
+            mesh = child;
+          }
+        });
+        if(!mesh) return;
+        const start = new THREE.Vector3(0, 6, 0);
+        const end = new THREE.Vector3().copy(mesh.position);
+        end.y = 6;
+        // control point above the midpoint for arc effect
+        const mid = start.clone().lerp(end, 0.5);
+        mid.y += 12;
+        const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+        // create several particles for each district
+        const flowCount = 3;
+        for(let k=0;k<flowCount;k++){
+          const geom = new THREE.SphereGeometry(0.6, 8, 8);
+          const mat = new THREE.MeshBasicMaterial({ color: district.color });
+          const particle = new THREE.Mesh(geom, mat);
+          companyGroup.add(particle);
+          centralFlows.push({ mesh: particle, curve: curve, t: Math.random(), speed: 0.002 + Math.random()*0.003 });
+        }
+      });
+    }
+
+    /**
+     * Create animated flows around the ring in the network view for the selected
+     * district. The flows are small spheres that move along a circular path.
+     */
+    function createNetworkFlows(district, radius) {
+      // remove previous network flows
+      networkFlows.forEach(f => {
+        networkGroup.remove(f.mesh);
+      });
+      networkFlows.length = 0;
+      // create a handful of flows around the ring
+      const count = 8;
+      for(let i=0;i<count;i++){
+        const geom = new THREE.SphereGeometry(0.5, 8, 8);
+        const mat = new THREE.MeshBasicMaterial({ color: district.color });
+        const mesh = new THREE.Mesh(geom, mat);
+        networkGroup.add(mesh);
+        networkFlows.push({ mesh: mesh, angle: Math.random() * Math.PI * 2, speed: 0.005 + Math.random()*0.005, radius: radius });
+      }
+    }
+
+    /**
+     * Draw the network view for a selected district. A large ring represents
+     * the cyclical nature of the district's processes, and six nodes around
+     * the ring correspond to the district's buildings. Animated flows move
+     * around the ring. When a node is clicked, the building details are
+     * displayed in the HUD.
+     */
+    function drawNetwork(district) {
+      // Clear existing network
+      networkGroup.clear();
+      // hide other groups
+      companyGroup.visible = false;
+      districtGroup.visible = false;
+      buildingGroup.visible = false;
+      networkGroup.visible = true;
+      // ring radii
+      const inner = 35;
+      const outer = 37;
+      // Outer ring
+      const ringGeom = new THREE.RingGeometry(inner, outer, 96);
+      const ringMat = new THREE.MeshBasicMaterial({ color: district.color, transparent:true, opacity:0.15, side: THREE.DoubleSide });
+      const ringMesh = new THREE.Mesh(ringGeom, ringMat);
+      ringMesh.rotation.x = -Math.PI/2;
+      networkGroup.add(ringMesh);
+      // Inner hex outline
+      const hexShape = new THREE.Shape();
+      for(let i=0;i<6;i++){
+        const ang = Math.PI/3 * i + Math.PI/6;
+        const x = Math.cos(ang) * inner;
+        const y = Math.sin(ang) * inner;
+        if(i===0) hexShape.moveTo(x,y); else hexShape.lineTo(x,y);
+      }
+      hexShape.closePath();
+      const hexGeom = new THREE.ShapeGeometry(hexShape);
+      const hexMat = new THREE.MeshBasicMaterial({ color: district.color, transparent:true, opacity:0.05, side: THREE.DoubleSide });
+      const hexMesh = new THREE.Mesh(hexGeom, hexMat);
+      hexMesh.rotation.x = -Math.PI/2;
+      networkGroup.add(hexMesh);
+      // Outline lines for the hex
+      const points = [];
+      for(let i=0;i<=6;i++){
+        const ang = Math.PI/3 * i + Math.PI/6;
+        const x = Math.cos(ang) * inner;
+        const z = Math.sin(ang) * inner;
+        points.push(new THREE.Vector3(x,0.1,z));
+      }
+      const lineGeom = new THREE.BufferGeometry().setFromPoints(points);
+      const lineMat = new THREE.LineBasicMaterial({ color: district.color, transparent:true, opacity:0.3 });
+      const hexLine = new THREE.Line(lineGeom, lineMat);
+      networkGroup.add(hexLine);
+      // Nodes for each building
+      const count = district.buildings.length;
+      const nodeRadius = (inner + outer) / 2;
+      district.buildings.forEach((bname, idx) => {
+        const angle = (Math.PI*2 / count) * idx;
+        const x = Math.cos(angle) * nodeRadius;
+        const z = Math.sin(angle) * nodeRadius;
+        const height = 6 + Math.random()*4;
+        const geom = new THREE.BoxGeometry(4, height, 4);
+        const mat = new THREE.MeshPhongMaterial({ color: district.color, emissive: district.color, emissiveIntensity:0.1 });
+        const node = new THREE.Mesh(geom, mat);
+        node.position.set(x, height/2 + 1, z);
+        node.userData = { type:'building', name:bname, district };
+        networkGroup.add(node);
+        // overlay for accessibility & clicking
+        const btn = createA11yNode(`network-node-${bname}`, bname, () => {
+          selectBuilding(bname);
+        });
+        node.userData.overlay = btn;
+
+        // create and append a label for this node
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'district-label';
+        labelDiv.style.fontSize = '11px';
+        labelDiv.textContent = bname;
+        document.getElementById('ui-layer').appendChild(labelDiv);
+        networkLabels.push(labelDiv);
+        node.userData.label = labelDiv;
+      });
+      // Create flows around the ring
+      createNetworkFlows(district, nodeRadius);
+      updateBreadcrumb();
+
+      // Update system overview for network view
+      updateSystemOverview({
+        view:'network',
+        activeNodes: district.buildings.length,
+        connections: district.buildings.length,
+        throughput: networkFlows.length * 10,
+        latency: Math.round(8 + Math.random()*8)
+      });
+    }
+
+    // Accessibility helper: create overlay button for interactive objects
+    function createA11yNode(id,label,onClick) {
+      const btn = document.createElement('button');
+      btn.className = 'a11y-node';
+      btn.setAttribute('role','button');
+      btn.setAttribute('aria-label',label);
+      btn.addEventListener('click', onClick);
+      document.body.appendChild(btn);
+      return btn;
+    }
+    // Position overlay
+    function updateOverlayPosition(btn, worldPos) {
+      const vector = worldPos.clone().project(camera);
+      const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-vector.y * 0.5 + 0.5) * window.innerHeight;
+      btn.style.left = `${x}px`;
+      btn.style.top = `${y}px`;
+    }
+
+    // Clean up groups and overlay nodes
+    function clearLevel(level) {
+      if(level==='company') {
+        companyGroup.clear();
+        districtGroup.clear();
+        buildingGroup.clear();
+      } else if(level==='district') {
+        districtGroup.clear();
+        buildingGroup.clear();
+      } else if(level==='building') {
+        buildingGroup.clear();
+      }
+      // Remove overlay buttons
+      document.querySelectorAll('.a11y-node').forEach(el=>el.remove());
+      // Remove district labels
+      districtLabels.forEach(label => label.remove());
+      districtLabels.length = 0;
+
+      // Remove network node labels
+      networkLabels.forEach(label => label.remove());
+      networkLabels.length = 0;
+    }
+
+    // Draw companies in ecosystem view
+    // Initial draw: company view with districts
+    function drawCompany() {
+      clearLevel('company');
+      companyGroup.clear();
+      // show/hide groups
+      companyGroup.visible = true;
+      districtGroup.visible = false;
+      buildingGroup.visible = false;
+      // central platform for company
+      const base = createHexPrism(18,5, companyData.color);
+      base.userData = { type:'company-center', company: companyData };
+      companyGroup.add(base);
+      // Add glow and ring around the central hex
+      addCentralEffects(companyData.color);
+      // Add towers to the central platform for a more detailed appearance
+      addCentralTowers(companyData.color);
+      // Create connecting arcs between the central platform and each district for visual continuity.
+      // The arcs are placed just outside the central base and extend a small
+      // angle towards each district. Their radii depend on the sizes of the
+      // central and district platforms defined above.
+      const arcInner = CENTRAL_RADIUS + DISTRICT_BASE_RADIUS + 2;
+      const arcOuter = arcInner + 2;
+      const arcLength = Math.PI / 6; // 30 degrees
+      companyData.districts.forEach((district, i) => {
+        // Determine the direction towards this district using its axial coordinates
+        const coord = axialCoords[i];
+        const q = coord.q;
+        const r = coord.r;
+        const x = (1.5 * GRID_CELL_RADIUS * q) * DISTANCE_MULTIPLIER;
+        const z = (Math.sqrt(3) * (r + q / 2) * GRID_CELL_RADIUS) * DISTANCE_MULTIPLIER;
+        const angle = Math.atan2(z, x);
+        const phiStart = angle - arcLength / 2;
+        const arcGeom = new THREE.RingGeometry(arcInner, arcOuter, 32, 1, phiStart, arcLength);
+        const arcMat = new THREE.MeshBasicMaterial({ color: district.color, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+        const arc = new THREE.Mesh(arcGeom, arcMat);
+        arc.rotation.x = -Math.PI / 2;
+        arc.position.set(0, 0.55, 0);
+        companyGroup.add(arc);
+      });
+      // Position each district at a hex cell around the centre using axial coordinates.
+      // Use DISTANCE_MULTIPLIER to scale the axial distance so that the ring of
+      // districts sits roughly at the original radius (~40 units). The size of
+      // each district base is defined by DISTRICT_BASE_RADIUS.
+      companyData.districts.forEach((district, i) => {
+        const coord = axialCoords[i];
+        const q = coord.q;
+        const r = coord.r;
+        const x = (1.5 * GRID_CELL_RADIUS * q) * DISTANCE_MULTIPLIER;
+        const z = (Math.sqrt(3) * (r + q / 2) * GRID_CELL_RADIUS) * DISTANCE_MULTIPLIER;
+        const mesh = createHexPrism(DISTRICT_BASE_RADIUS, 3, district.color);
+        mesh.position.set(x, 0, z);
+        // Keep the district orientation aligned with the global grid. We
+        // intentionally avoid rotating each district here to preserve
+        // consistent orientation across all hexes. A previous attempt
+        // rotated districts towards the centre, pero generaba incoherencias
+        // visuales entre la rejilla y los hexágonos.
+        mesh.userData = { type: 'district', district };
+        companyGroup.add(mesh);
+        // Add decorative towers within each district hex
+        addDistrictTowers(mesh, district);
+        // Create overlay button for interactions
+        const btn = createA11yNode(`district-${district.id}`, district.name, () => {
+          selectDistrict(district);
+        });
+        mesh.userData.overlay = btn;
+        // Create and append a label for this district
+        const label = document.createElement('div');
+        label.className = 'district-label';
+        label.textContent = district.name;
+        document.getElementById('ui-layer').appendChild(label);
+        districtLabels.push(label);
+        mesh.userData.label = label;
+      });
+      updateBreadcrumb();
+
+      // Generate flows between the central platform and each district
+      createCentralFlows();
+
+      // Update system overview metrics for the company view
+      updateSystemOverview({
+        view:'company',
+        activeDistricts: companyData.districts.length,
+        totalBuildings: companyData.districts.length * (companyData.districts[0]?.buildings.length || 0),
+        flowRate: centralFlows.length,
+        health: 98
+      });
+    }
+    // Draw buildings within district
+    function drawDistrict(district) {
+      clearLevel('district');
+      // central circle (thin) for district base
+      const baseGeom = new THREE.CylinderGeometry(8,8,1,32);
+      const baseMat = new THREE.MeshPhongMaterial({ color:district.color, emissive:district.color, emissiveIntensity:0.05, transparent:true, opacity:0.9 });
+      const base = new THREE.Mesh(baseGeom, baseMat);
+      base.position.set(0,0,0);
+      buildingGroup.add(base);
+      // arrange buildings around
+      const radius = 25;
+      const count = district.buildings.length;
+      district.buildings.forEach((bname,i) => {
+        const angle = (Math.PI*2 / count)* i;
+        const x = Math.cos(angle)*radius;
+        const z = Math.sin(angle)*radius;
+        const height = 6 + Math.random()*6;
+        const geom = new THREE.BoxGeometry(4, height, 4);
+        const mat = new THREE.MeshPhongMaterial({ color:district.color, emissive:district.color, emissiveIntensity:0.05 });
+        const mesh = new THREE.Mesh(geom, mat);
+        mesh.position.set(x, height/2 + 1, z);
+        mesh.userData = { type:'building', name:bname, district };
+        buildingGroup.add(mesh);
+        const btn = createA11yNode(`building-${bname}`, bname, () => {
+          selectBuilding(bname);
+        });
+        mesh.userData.overlay = btn;
+      });
+      updateBreadcrumb();
+    }
+
+    // Selection functions
+    // Go back to company view
+    function backToCompany() {
+      state.level = 'company';
+      state.selectedDistrict = null;
+      state.selectedBuilding = null;
+      state.selectedModule = null;
+      state.selectedElement = null;
+      drawCompany();
+      // Show company group and hide others
+      companyGroup.visible = true;
+      districtGroup.visible = false;
+      buildingGroup.visible = false;
+      networkGroup.visible = false;
+      hideHud();
+    }
+    function selectDistrict(district) {
+      state.level = 'district';
+      state.selectedDistrict = district;
+      state.selectedBuilding = null;
+      // Clear overlay buttons and district labels before rendering network
+      clearLevel('district');
+      // Draw the network view for the selected district
+      drawNetwork(district);
+      // drawNetwork hides other groups and toggles visibility internally
+    }
+    function selectBuilding(name) {
+      state.level = 'building';
+      state.selectedBuilding = name;
+      showBuildingDetails(name);
+      updateBreadcrumb();
+    }
+
+    // Generate placeholder modules and elements for a building
+    function generateModulesForBuilding(buildingName) {
+      const moduleNames = ['Module A','Module B','Module C','Module D'];
+      const elementNames = ['Element 1','Element 2','Element 3','Element 4'];
+      return moduleNames.map(mName => ({
+        name: mName,
+        elements: elementNames.map(eName => ({
+          name: eName,
+          instances: [
+            { name: `${buildingName}-${mName}-${eName}-v1`, status:'Active', usage:'85%', updated:'2h ago' },
+            { name: `${buildingName}-${mName}-${eName}-v2`, status:'Updating', usage:'45%', updated:'1d ago' },
+            { name: `${buildingName}-${mName}-${eName}-v3`, status:'Pending', usage:'5%', updated:'3d ago' }
+          ]
+        }))
+      }));
+    }
+
+    function selectModule(index) {
+      state.level = 'module';
+      state.selectedModule = state.currentModules[index];
+      state.selectedElement = null;
+      showModuleDetails(state.selectedModule);
+      updateBreadcrumb();
+    }
+
+    function showModuleDetails(module) {
+      const hud = document.getElementById('hud');
+      const title = document.getElementById('hud-title');
+      const content = document.getElementById('hud-content');
+      title.textContent = module.name;
+      content.innerHTML = '';
+      module.elements.forEach((elem, idx) => {
+        const div = document.createElement('div');
+        div.className = 'metric';
+        div.style.cursor = 'pointer';
+        div.dataset.index = idx;
+        const span1 = document.createElement('span');
+        span1.className = 'metric-label';
+        span1.textContent = elem.name;
+        const span2 = document.createElement('span');
+        span2.className = 'metric-value';
+        span2.textContent = `${elem.instances.length} instances`;
+        div.appendChild(span1);
+        div.appendChild(span2);
+        div.addEventListener('click', () => selectElement(idx));
+        content.appendChild(div);
+      });
+      hud.classList.add('visible');
+    }
+
+    function selectElement(index) {
+      state.level = 'element';
+      const module = state.selectedModule;
+      const element = module.elements[index];
+      state.selectedElement = element;
+      showElementDetails(element);
+      updateBreadcrumb();
+    }
+
+    function showElementDetails(element) {
+      const hud = document.getElementById('hud');
+      const title = document.getElementById('hud-title');
+      const content = document.getElementById('hud-content');
+      title.textContent = element.name;
+      content.innerHTML = '';
+      element.instances.forEach(inst => {
+        const div = document.createElement('div');
+        div.className = 'metric';
+        const span1 = document.createElement('span');
+        span1.className = 'metric-label';
+        span1.textContent = inst.name;
+        const span2 = document.createElement('span');
+        span2.className = 'metric-value';
+        span2.textContent = `${inst.status} (${inst.usage})`;
+        div.appendChild(span1);
+        div.appendChild(span2);
+        content.appendChild(div);
+      });
+      hud.classList.add('visible');
+    }
+    // Show details in HUD
+    function showBuildingDetails(name) {
+      const hud = document.getElementById('hud');
+      const title = document.getElementById('hud-title');
+      const content = document.getElementById('hud-content');
+      // Generate modules for this building
+      state.currentModules = generateModulesForBuilding(name);
+      state.selectedModule = null;
+      state.selectedElement = null;
+      title.textContent = name;
+      content.innerHTML = '';
+      state.currentModules.forEach((mod, idx) => {
+        const div = document.createElement('div');
+        div.className = 'metric';
+        div.style.cursor = 'pointer';
+        div.dataset.index = idx;
+        const span1 = document.createElement('span');
+        span1.className = 'metric-label';
+        span1.textContent = mod.name;
+        const span2 = document.createElement('span');
+        span2.className = 'metric-value';
+        span2.textContent = `${mod.elements.length} elements`;
+        div.appendChild(span1);
+        div.appendChild(span2);
+        div.addEventListener('click', () => selectModule(idx));
+        content.appendChild(div);
+      });
+      hud.classList.add('visible');
+    }
+    function hideHud() {
+      document.getElementById('hud').classList.remove('visible');
+    }
+
+    // Draw ecosystem: for single company scenario we simply draw the company and reset state
+    function drawEcosystem() {
+      clearLevel('company');
+      state.level = 'company';
+      state.selectedCompany = companyData;
+      state.selectedDistrict = null;
+      state.selectedBuilding = null;
+      state.selectedModule = null;
+      state.selectedElement = null;
+      // Reset crumb
+      hideHud();
+      drawCompany();
+      // ensure group visibility
+      companyGroup.visible = true;
+      districtGroup.visible = false;
+      buildingGroup.visible = false;
+    }
+    // Breadcrumb update
+    function updateBreadcrumb() {
+      const current = document.getElementById('breadcrumb-current');
+      const sep = document.querySelector('.breadcrumb-sep');
+      if(state.level==='ecosystem') {
+        current.textContent = '';
+        sep.style.display = 'none';
+      } else if(state.level==='company') {
+        sep.style.display = 'inline';
+        current.textContent = state.selectedCompany.name;
+      } else if(state.level==='district') {
+        sep.style.display = 'inline';
+        current.textContent = `${state.selectedCompany.name} › ${state.selectedDistrict.name}`;
+      } else if(state.level==='building') {
+        sep.style.display = 'inline';
+        current.textContent = `${state.selectedCompany.name} › ${state.selectedDistrict.name} › ${state.selectedBuilding}`;
+      } else if(state.level==='module') {
+        sep.style.display = 'inline';
+        current.textContent = `${state.selectedCompany.name} › ${state.selectedDistrict.name} › ${state.selectedBuilding} › ${state.selectedModule.name}`;
+      } else if(state.level==='element') {
+        sep.style.display = 'inline';
+        current.textContent = `${state.selectedCompany.name} › ${state.selectedDistrict.name} › ${state.selectedBuilding} › ${state.selectedModule.name} › ${state.selectedElement.name}`;
+      }
+    }
+
+    // Render loop and overlay updates
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+      // Update overlay buttons and district labels positions
+      [companyGroup, districtGroup, buildingGroup, networkGroup].forEach(group => {
+        group.children.forEach(obj => {
+          if(obj.userData) {
+            // Use world position so overlay tracks transformed objects
+            const worldPos = new THREE.Vector3();
+            obj.getWorldPosition(worldPos);
+            if(obj.userData.overlay) {
+              updateOverlayPosition(obj.userData.overlay, worldPos);
+            }
+            if(obj.userData.label) {
+              updateOverlayPosition(obj.userData.label, worldPos);
+            }
+          }
+        });
+      });
+      // Animate pulsing central ring if present
+      const ring = companyGroup.getObjectByName('centralRing');
+      if (ring) {
+        const t = performance.now() * 0.001;
+        const scale = 1 + 0.05 * Math.sin(t * 2.0);
+        ring.scale.set(scale, scale, 1);
+      }
+
+      // Update flows from central to districts
+      centralFlows.forEach(f => {
+        f.t += f.speed;
+        if(f.t > 1) f.t -= 1;
+        const pos = f.curve.getPoint(f.t);
+        f.mesh.position.copy(pos);
+      });
+      // Update network flows around ring in network view
+      networkFlows.forEach(f => {
+        f.angle += f.speed;
+        if(f.angle > Math.PI*2) f.angle -= Math.PI*2;
+        const x = Math.cos(f.angle) * f.radius;
+        const z = Math.sin(f.angle) * f.radius;
+        f.mesh.position.set(x, 1.5 + Math.sin(f.angle*3)*0.5, z);
+      });
+    }
+    animate();
+
+    // Create the ground grid once the scene is set up. The hex outline
+    // pattern on the ground provides context for positioning. Unlike
+    // earlier attempts with a cylindrical backdrop, we revert to a
+    // planar grid so that the honeycomb pattern lies beneath the
+    // city rather than around or above it.
+    createGrid();
+    // Hide the ground grid entirely. The user requested removing the
+    // honeycomb pattern from the floor; leaving the grid visible was
+    // distracting and did not match the desired aesthetics. By
+    // disabling its visibility we retain the dark background while
+    // keeping all other functionality intact.
+    gridGroup.visible = false;
+
+    // Initialize ecosystem view
+    // For a single company scenario we collapse ecosystem into company view
+    drawEcosystem();
+    updateBreadcrumb();
+    // Breadcrumb interactions
+    document.querySelectorAll('#nav .breadcrumb-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const level = item.dataset.level;
+        if(level==='ecosystem') {
+          state.level='ecosystem';
+          state.selectedCompany=null;
+          state.selectedDistrict=null;
+          state.selectedBuilding=null;
+          hideHud();
+          drawEcosystem();
+          updateBreadcrumb();
+        }
+      });
+    });
+    // Mouse drag to rotate camera
+    let dragging = false;
+    let lastX=0, lastY=0;
+    renderer.domElement.addEventListener('mousedown',(e)=>{
+      dragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      document.body.classList.add('grabbing');
+    });
+    window.addEventListener('mousemove',(e)=>{
+      if(dragging){
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        // horizontal drag rotates the groups around the vertical axis
+        // Rotate all major scene groups so the city and background grid
+        // stay aligned. Previously, only the company/district/building
+        // groups were rotated which caused the hexes to drift relative to
+        // the static grid. By rotating the gridGroup (and networkGroup
+        // when visible) at the same rate, the background honeycomb
+        // pattern maintains its orientation with respect to the hex
+        // platforms. This matches the behaviour in the reference
+        // prototype where the entire city rotates as one unit.
+        const deltaRot = dx * 0.005;
+        companyGroup.rotation.y += deltaRot;
+        districtGroup.rotation.y += deltaRot;
+        buildingGroup.rotation.y += deltaRot;
+        // When exploring districts or buildings, rotate the network
+        // group as well so it stays aligned with the company. We no
+        // longer rotate the grid here – the background honeycomb
+        // remains fixed relative to the world. This mirrors the
+        // reference prototype where the city rotates over a static
+        // backdrop, creating a sense of depth.
+        if (networkGroup.visible) {
+          networkGroup.rotation.y += deltaRot;
+        }
+        // vertical drag changes the camera tilt angle
+        camAngle -= dy * 0.005;
+        // clamp angle to avoid flipping the camera
+        // Clamp the camera elevation angle to a narrower range. Allowing
+        // extremely low angles caused the grid to appear almost vertical
+        // when the user drags up, which led to confusion. Restricting
+        // the range (approx 23° to 57°) keeps the grid in a more
+        // horizontal orientation similar to the example.
+        camAngle = Math.min(Math.max(camAngle, 0.4), 1.0);
+        updateCamera();
+      }
+    });
+    window.addEventListener('mouseup',()=>{
+      dragging=false;
+      document.body.classList.remove('grabbing');
+    });
+    // Mouse wheel to zoom in/out by adjusting the camera distance
+    window.addEventListener('wheel',(e)=>{
+      // Prevent page scroll
+      e.preventDefault();
+      cameraDistance += e.deltaY * 0.2;
+      cameraDistance = Math.min(Math.max(cameraDistance, 100), 350);
+      updateCamera();
+    }, { passive: false });
+    // Resize handler
+    window.addEventListener('resize',()=>{
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      // Reposition camera after resize
+      updateCamera();
+    });
+  </script>
+</body>
+</html>
