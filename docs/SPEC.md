@@ -4,7 +4,7 @@
 
 1. [**ARQUITECTURA GENERAL**](#1-arquitectura-general)
 2. [**ESPECIFICACIONES POR NIVEL**](#2-especificaciones-por-nivel)
-3. [**MAPA COMPLETO DE NAVEGACIÓN**](#3-mapa-completo-de-navegación)
+3. [**MAPA COMPLETO DE NAVEGACIÓN**](#3-mapa-completo-de-navegación) -> MODIFICADO POR ARCHITECTURE3.md (manda este) (TENER EN CUENTA LA PROPAGACIÓN DE CAMBIOS AL RESTO).
 4. [**SISTEMA DE DATOS Y APIs**](#4-sistema-de-datos-y-apis)
 5. [**SISTEMA DE RENDERING**](#5-sistema-de-rendering)
 6. [**SISTEMA DE ESTADO Y EVENTOS**](#6-sistema-de-estado-y-eventos)
