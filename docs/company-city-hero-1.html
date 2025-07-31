@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CompanyCity - Your Business. One View. Total Clarity.</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0f;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        /* Background Canvas */
+        #cityCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.6;
+            z-index: 1;
+        }
+        
+        /* Content */
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        /* Logo */
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            margin-bottom: 3rem;
+            color: #8b5cf6;
+        }
+        
+        /* Main Headline */
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -2px;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Subtitle */
+        .subtitle {
+            font-size: clamp(1.25rem, 3vw, 1.75rem);
+            color: #8a8aa0;
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+        
+        /* CTA Buttons */
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 4rem;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.125rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #8b5cf6;
+            color: #fff;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+        }
+        
+        .btn-primary:hover {
+            background: #7c3aed;
+            box-shadow: 0 0 40px rgba(139, 92, 246, 0.7);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #8b5cf6;
+            border: 1px solid #8b5cf6;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(139, 92, 246, 0.1);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+        
+        /* Feature Pills */
+        .feature-pills {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 4rem;
+        }
+        
+        .pill {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 100px;
+            font-size: 1rem;
+        }
+        
+        .pill-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .pill-dot.red { background: #ff0055; }
+        .pill-dot.yellow { background: #ff6b00; }
+        .pill-dot.green { background: #00ff88; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.8); }
+        }
+        
+        /* Problem/Solution Section */
+        .problem-solution {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            margin: 4rem 0;
+            text-align: left;
+        }
+        
+        .section {
+            background: rgba(20, 20, 31, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .section h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .section ul {
+            list-style: none;
+        }
+        
+        .section li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #8a8aa0;
+        }
+        
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Testimonial */
+        .testimonial {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 4rem auto;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .quote {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+        
+        .attribution {
+            color: #8b5cf6;
+            font-weight: 500;
+        }
+        
+        /* Animation */
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { letter-spacing: -1px; }
+            .cta-group { flex-direction: column; width: 100%; }
+            .btn { width: 100%; justify-content: center; }
+            .feature-pills { gap: 1rem; }
+            .pill { font-size: 0.875rem; padding: 0.5rem 1rem; }
+        }
+        
+        /* Glow Effects */
+        .glow-purple {
+            filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6));
+        }
+        
+        .glow-green {
+            filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.6));
+        }
+        
+        /* Demo Preview */
+        .demo-preview {
+            margin: 4rem 0;
+            padding: 2rem;
+            background: rgba(20, 20, 31, 0.4);
+            border-radius: 16px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .demo-preview::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .demo-text {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            font-size: 1.125rem;
+            color: #8a8aa0;
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <canvas id="cityCanvas"></canvas>
+        
+        <div class="hero-content">
+            <div class="logo">CompanyCity</div>
+            
+            <h1>
+                Tu empresa.<br>
+                Una ciudad.<br>
+                <span class="gradient-text">Todo claro.</span>
+            </h1>
+            
+            <p class="subtitle">
+                Ve problemas antes de que exploten.<br>
+                Navega tu negocio como Google Maps.
+            </p>
+            
+            <div class="cta-group">
+                <button class="btn btn-primary">
+                    <span>Explorar Demo</span>
+                    <span>→</span>
+                </button>
+                <button class="btn btn-secondary">
+                    Solicitar Acceso
+                </button>
+            </div>
+            
+            <div class="feature-pills">
+                <div class="pill">
+                    <div class="pill-dot red"></div>
+                    <span>¿Ves ese distrito rojo? Son tus ventas. 47 leads atascados.</span>
+                </div>
+            </div>
+            
+            <div class="feature-pills">
+                <div class="pill">
+                    <span>🎯</span>
+                    <span>Click. Zoom. Resuelve.</span>
+                </div>
+                <div class="pill">
+                    <span>🌍</span>
+                    <span>Contexto en tiempo real</span>
+                </div>
+                <div class="pill">
+                    <span>⚡</span>
+                    <span>De macro a micro en 3 clicks</span>
+                </div>
+            </div>
+            
+            <div class="problem-solution">
+                <div class="section">
+                    <h3>
+                        <span style="color: #ff0055;">✕</span>
+                        No más
+                    </h3>
+                    <ul>
+                        <li>
+                            <span class="icon">📊</span>
+                            15 dashboards diferentes
+                        </li>
+                        <li>
+                            <span class="icon">🔍</span>
+                            "¿Dónde está el problema?"
+                        </li>
+                        <li>
+                            <span class="icon">📄</span>
+                            Reportes de 50 páginas
+                        </li>
+                        <li>
+                            <span class="icon">⏰</span>
+                            2 horas buscando la causa
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="section">
+                    <h3>
+                        <span style="color: #00ff88;">✓</span>
+                        Solo
+                    </h3>
+                    <ul>
+                        <li>
+                            <span class="icon">🏙️</span>
+                            Una ciudad digital unificada
+                        </li>
+                        <li>
+                            <span class="icon">🚨</span>
+                            Problemas visualmente obvios
+                        </li>
+                        <li>
+                            <span class="icon">🗺️</span>
+                            Navegación intuitiva
+                        </li>
+                        <li>
+                            <span class="icon">⚡</span>
+                            Acción en segundos
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="testimonial float">
+                <p class="quote">
+                    "Pasé de buscar problemas 2 horas<br>
+                    a verlos en 2 segundos"
+                </p>
+                <p class="attribution">
+                    Ana García, COO TechCorp
+                </p>
+            </div>
+            
+            <div class="demo-preview">
+                <p class="demo-text">
+                    <span class="glow-purple">Vista en vivo:</span> 3 distritos operando normal, 
+                    1 distrito en warning, 327 procesos activos
+                </p>
+            </div>
+            
+            <div class="cta-group">
+                <button class="btn btn-primary glow-purple">
+                    Ver Demo Interactivo
+                </button>
+            </div>
+        </div>
+    </section>
+    
+    <script>
+        // Simple city visualization
+        const canvas = document.getElementById('cityCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // City elements
+        const districts = [
+            { x: 0.3, y: 0.3, size: 60, color: '#00ff88', status: 'ok' },
+            { x: 0.7, y: 0.3, size: 60, color: '#00ff88', status: 'ok' },
+            { x: 0.5, y: 0.5, size: 80, color: '#8b5cf6', status: 'ok' },
+            { x: 0.3, y: 0.7, size: 60, color: '#ff6b00', status: 'warning' },
+            { x: 0.7, y: 0.7, size: 60, color: '#00ff88', status: 'ok' }
+        ];
+        
+        // Particles
+        const particles = [];
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+            
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            }
+            
+            draw() {
+                ctx.fillStyle = `rgba(139, 92, 246, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // Create particles
+        for (let i = 0; i < 50; i++) {
+            particles.push(new Particle());
+        }
+        
+        // Animation loop
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw connections
+            districts.forEach((district, i) => {
+                districts.slice(i + 1).forEach(other => {
+                    ctx.strokeStyle = 'rgba(139, 92, 246, 0.1)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(district.x * canvas.width, district.y * canvas.height);
+                    ctx.lineTo(other.x * canvas.width, other.y * canvas.height);
+                    ctx.stroke();
+                });
+            });
+            
+            // Draw districts
+            districts.forEach(district => {
+                const x = district.x * canvas.width;
+                const y = district.y * canvas.height;
+                
+                // Glow effect
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, district.size);
+                gradient.addColorStop(0, district.color + '40');
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, district.size * 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // District hexagon
+                ctx.strokeStyle = district.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i / 6) * Math.PI * 2;
+                    const px = x + Math.cos(angle) * district.size;
+                    const py = y + Math.sin(angle) * district.size;
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                
+                // Status indicator
+                if (district.status === 'warning') {
+                    ctx.fillStyle = district.color;
+                    ctx.globalAlpha = 0.5 + Math.sin(Date.now() * 0.003) * 0.3;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            });
+            
+            // Draw particles
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+    </script>
+</body>
+</html>
