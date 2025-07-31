@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>CompanyCity - Composable Enterprise Navigation</title>
+</head>
+<body>
+   <!-- Hero Section usando Web Components -->
+   <company-city-hero>
+       <!-- Navigation -->
+       <city-nav slot="navigation">
+           <nav-brand>CompanyCity</nav-brand>
+           <nav-menu>
+               <nav-item href="#product">Product</nav-item>
+               <nav-item href="#solutions">Solutions</nav-item>
+               <nav-item href="#pricing">Pricing</nav-item>
+           </nav-menu>
+           <nav-actions>
+               <city-button variant="ghost">Sign In</city-button>
+               <city-button variant="primary">Start Free Trial</city-button>
+           </nav-actions>
+       </city-nav>
+
+       <!-- Main Content -->
+       <hero-content slot="main">
+           <text-block>
+               <h1 slot="title">CompanyCity</h1>
+               <h2 slot="subtitle">Your Enterprise. One Living City.</h2>
+               <p slot="tagline">See Everything. Navigate Anywhere. Act Instantly.</p>
+               <p slot="description">
+                   Transform your entire organization into an explorable digital metropolis
+               </p>
+           </text-block>
+
+           <action-group>
+               <city-button size="large" variant="primary">Start Free Trial</city-button>
+               <city-button size="large" variant="glass">Watch Demo</city-button>
+           </action-group>
+       </hero-content>
+
+       <!-- City Preview -->
+       <city-preview slot="visual">
+           <city-layer level="-1" name="market">
+               <city-node type="competitor" status="active" />
+               <city-node type="competitor" status="active" />
+               <city-node type="our-company" status="primary" />
+           </city-layer>
+           <city-layer level="0" name="ecosystem">
+               <connection-line from="our-company" to="partner-1" />
+               <connection-line from="our-company" to="vendor-1" />
+           </city-layer>
+           <city-layer level="1" name="company">
+               <city-district name="Sales" status="warning" />
+               <city-district name="Finance" status="healthy" />
+               <city-district name="Operations" status="healthy" />
+           </city-layer>
+       </city-preview>
+
+       <!-- Value Props -->
+       <value-grid slot="features">
+           <value-card icon="zoom-out" label="Zoom Out">
+               See market position
+           </value-card>
+           <value-card icon="zoom-in" label="Zoom In">
+               Dive to any process
+           </value-card>
+           <value-card icon="real-time" label="Real-Time">
+               Live data, not reports
+           </value-card>
+           <value-card icon="actionable" label="Actionable">
+               Fix problems in-place
+           </value-card>
+       </value-grid>
+
+       <!-- Social Proof -->
+       <testimonial-group slot="testimonials">
+           <testimonial-card 
+               author="Sarah Chen" 
+               role="COO" 
+               company="TechCorp"
+               avatar-gradient="purple-blue">
+               We found and fixed a $2M bottleneck in 3 minutes.
+           </testimonial-card>
+           <testimonial-card 
+               author="Marcus Rodriguez" 
+               role="CEO" 
+               company="Global Retail Inc"
+               avatar-gradient="green-yellow">
+               Finally, our entire leadership team sees the same picture.
+           </testimonial-card>
+       </testimonial-group>
+
+       <!-- Trust Indicators -->
+       <trust-metrics slot="metrics">
+           <metric-item value="500+" label="Enterprises" />
+           <metric-item value="2M+" label="Daily Navigations" />
+           <metric-item value="0" label="Training Required" />
+       </trust-metrics>
+   </company-city-hero>
+
+   <script type="module">
+       // Base Component Class
+       class CityComponent extends HTMLElement {
+           constructor() {
+               super();
+               this.attachShadow({ mode: 'open' });
+           }
+
+           connectedCallback() {
+               this.render();
+               this.setupEventListeners();
+               this.observeVisibility();
+           }
+
+           observeVisibility() {
+               if (!this.hasAttribute('animate-on-view')) return;
+               
+               const observer = new IntersectionObserver(
+                   entries => {
+                       entries.forEach(entry => {
+                           if (entry.isIntersecting) {
+                               this.classList.add('in-view');
+                               observer.unobserve(this);
+                           }
+                       });
+                   },
+                   { threshold: 0.1 }
+               );
+               observer.observe(this);
+           }
+
+           setupEventListeners() {}
+           render() {}
+       }
+
+       // Hero Container
+       class CompanyCityHero extends CityComponent {
+           render() {
+               this.shadowRoot.innerHTML = `
+                   <style>
+                       :host {
+                           display: block;
+                           min-height: 100vh;
+                           background: radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a0f 50%, #000 100%);
+                           position: relative;
+                           overflow: hidden;
+                       }
+
+                       .hero-grid {
+                           display: grid;
+                           grid-template-areas:
+                               "nav nav nav"
+                               "content visual visual"
+                               "features features features"
+                               "testimonials testimonials testimonials"
+                               "metrics metrics metrics";
+                           gap: 2rem;
+                           max-width: 1200px;
+                           margin: 0 auto;
+                           padding: 2rem;
+                       }
+
+                       @media (max-width: 768px) {
+                           .hero-grid {
+                               grid-template-areas:
+                                   "nav"
+                                   "content"
+                                   "visual"
+                                   "features"
+                                   "testimonials"
+                                   "metrics";
+                           }
+                       }
+
+                       ::slotted([slot="navigation"]) { grid-area: nav; }
+                       ::slotted([slot="main"]) { grid-area: content; }
+                       ::slotted([slot="visual"]) { grid-area: visual; }
+                       ::slotted([slot="features"]) { grid-area: features; }
+                       ::slotted([slot="testimonials"]) { grid-area: testimonials; }
+                       ::slotted([slot="metrics"]) { grid-area: metrics; }
+
+                       /* Grid background */
+                       :host::before {
+                           content: '';
+                           position: absolute;
+                           inset: 0;
+                           background-image: 
+                               linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                               linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+                           background-size: 50px 50px;
+                           pointer-events: none;
+                       }
+                   </style>
+                   <div class="hero-grid">
+                       <slot name="navigation"></slot>
+                       <slot name="main"></slot>
+                       <slot name="visual"></slot>
+                       <slot name="features"></slot>
+                       <slot name="testimonials"></slot>
+                       <slot name="metrics"></slot>
+                   </div>
+               `;
+           }
+       }
+
+       // Navigation Component
+       class CityNav extends CityComponent {
+           render() {
+               this.shadowRoot.innerHTML = `
+                   <style>
+                       :host {
+                           display: flex;
+                           justify-content: space-between;
+                           align-items: center;
+                           padding: 1rem 0;
+                       }
+
+                       ::slotted(nav-brand) {
+                           font-size: 1.5rem;
+                           font-weight: bold;
+                           background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+                           -webkit-background-clip: text;
+                           -webkit-text-fill-color: transparent;
+                       }
+
+                       ::slotted(nav-menu) {
+                           display: flex;
+                           gap: 2rem;
+                       }
+
+                       ::slotted(nav-actions) {
+                           display: flex;
+                           gap: 1rem;
+                       }
+
+                       @media (max-width: 768px) {
+                           ::slotted(nav-menu) { display: none; }
+                       }
+                   </style>
+                   <slot></slot>
+               `;
+           }
+       }
+
+       // Button Component
+       class CityButton extends CityComponent {
+           static get observedAttributes() {
+               return ['variant', 'size'];
+           }
+
+           render() {
+               const variant = this.getAttribute('variant') || 'primary';
+               const size = this.getAttribute('size') || 'medium';
+
+               this.shadowRoot.innerHTML = `
+                   <style>
+                       :host {
+                           display: inline-block;
+                       }
+
+                       button {
+                           font-family: inherit;
+                           border: none;
+                           border-radius: 0.5rem;
+                           cursor: pointer;
+                           transition: all 0.2s ease;
+                           font-weight: 600;
+                           position: relative;
+                           overflow: hidden;
+                       }
+
+                       /* Sizes */
+                       button.medium {
+                           padding: 0.5rem 1rem;
+                           font-size: 0.875rem;
+                       }
+
+                       button.large {
+                           padding: 1rem 2rem;
+                           font-size: 1.125rem;
+                       }
+
+                       /* Variants */
+                       button.primary {
+                           background: #8b5cf6;
+                           color: white;
+                       }
+
+                       button.primary:hover {
+                           background: #7c3aed;
+                           transform: translateY(-1px);
+                           box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+                       }
+
+                       button.glass {
+                           background: rgba(10, 10, 15, 0.6);
+                           backdrop-filter: blur(10px);
+                           border: 1px solid rgba(139, 92, 246, 0.2);
+                           color: white;
+                       }
+
+                       button.glass:hover {
+                           background: rgba(139, 92, 246, 0.1);
+                           border-color: rgba(139, 92, 246, 0.4);
+                       }
+
+                       button.ghost {
+                           background: transparent;
+                           color: white;
+                       }
+
+                       button.ghost:hover {
+                           color: #8b5cf6;
+                       }
+
+                       /* Ripple effect */
+                       .ripple {
+                           position: absolute;
+                           border-radius: 50%;
+                           background: rgba(255, 255, 255, 0.5);
+                           transform: scale(0);
+                           animation: ripple 0.6s ease-out;
+                           pointer-events: none;
+                       }
+
+                       @keyframes ripple {
+                           to {
+                               transform: scale(4);
+                               opacity: 0;
+                           }
+                       }
+                   </style>
+                   <button class="${variant} ${size}">
+                       <slot></slot>
+                   </button>
+               `;
+           }
+
+           setupEventListeners() {
+               const button = this.shadowRoot.querySelector('button');
+               button.addEventListener('click', this.createRipple.bind(this));
+           }
+
+           createRipple(e) {
+               const button = e.currentTarget;
+               const ripple = document.createElement('span');
+               const rect = button.getBoundingClientRect();
+               const size = Math.max(rect.width, rect.height);
+               const x = e.clientX - rect.left - size / 2;
+               const y = e.clientY - rect.top - size / 2;
+
+               ripple.style.width = ripple.style.height = size + 'px';
+               ripple.style.left = x + 'px';
+               ripple.style.top = y + 'px';
+               ripple.classList.add('ripple');
+
+               button.appendChild(ripple);
+               setTimeout(() => ripple.remove(), 600);
+           }
+       }
+
+       // City Preview Component
+       class CityPreview extends CityComponent {
+           render() {
+               this.shadowRoot.innerHTML = `
+                   <style>
+                       :host {
+                           display: block;
+                           width: 100%;
+                           height: 400px;
+                           position: relative;
+                           perspective: 1000px;
+                       }
+
+                       .city-container {
+                           width: 100%;
+                           height: 100%;
+                           position: relative;
+                           transform-style: preserve-3d;
+                           transform: rotateX(30deg) rotateY(-45deg);
+                           transition: transform 0.3s ease;
+                       }
+
+                       :host(:hover) .city-container {
+                           transform: rotateX(25deg) rotateY(-40deg);
+                       }
+
+                       ::slotted(city-layer) {
+                           position: absolute;
+                           width: 100%;
+                           height: 100%;
+                           transform-style: preserve-3d;
+                       }
+
+                       .grid-plane {
+                           position: absolute;
+                           width: 200%;
+                           height: 200%;
+                           top: -50%;
+                           left: -50%;
+                           background-image: 
+                               linear-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px),
+                               linear-gradient(90deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+                           background-size: 30px 30px;
+                           transform: rotateX(90deg) translateZ(-50px);
+                           opacity: 0.5;
+                       }
+                   </style>
+                   <div class="city-container" @mousemove=${this.handleMouseMove}>
+                       <div class="grid-plane"></div>
+                       <slot></slot>
+                   </div>
+               `;
+           }
+
+           handleMouseMove = (e) => {
+               const rect = this.getBoundingClientRect();
+               const x = (e.clientX - rect.left) / rect.width - 0.5;
+               const y = (e.clientY - rect.top) / rect.height - 0.5;
+               
+               const container = this.shadowRoot.querySelector('.city-container');
+               const rotateY = -45 + x * 10;
+               const rotateX = 30 - y * 10;
+               
+               container.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+           }
+       }
+
+       // City Layer Component
+       class CityLayer extends CityComponent {
+           static get observedAttributes() {
+               return ['level', 'name'];
+           }
+
+           render() {
+               const level = this.getAttribute('level') || '0';
+               const translateY = -parseInt(level) * 30;
+
+               this.shadowRoot.innerHTML = `
+                   <style>
+                       :host {
+                           display: block;
+                           transform: translateY(${translateY}px);
+                           animation: float-in 1s ease-out forwards;
+                           opacity: 0;
+                       }
+
+                       @keyframes float-in {
+                           from {
+                               opacity: 0;
+                               transform: translateY(${translateY + 20}px);
+                           }
+                           to {
+                               opacity: 1;
+                               transform: translateY(${translateY}px);
+                           }
+                       }
+
+                       .layer-container {
+                           position: relative;
+                           width: 100%;
+                           height: 100%;
+                           display: flex;
+                           justify-content: center;
+                           align-items: center;
+                           gap: 2rem;
+                       }
+
+                       ::slotted(*) {
+                           transition: all 0.3s ease;
+                       }
+                   </style>
+                   <div class="layer-container">
+                       <slot></slot>
+                   </div>
+               `;
+           }
+       }
+
+       // City District Component
+       class CityDistrict extends CityComponent {
+           static get observedAttributes() {
+               return ['name', 'status'];
+           }
+
+           render() {
+               const status = this.getAttribute('status') || 'healthy';
+               const name = this.getAttribute('name') || 'District';
+               
+               const colors = {
+                   healthy: '#00ff88',
+                   warning: '#ffaa00',
+                   critical: '#ff0055',
+                   primary: '#8b5cf6'
+               };
+
+               this.shadowRoot.innerHTML = `
+                   <style>
+                       :host {
+                           display: block;
+                           width: 60px;
+                           height: 60px;
+                           cursor: pointer;
+                       }
+
+                       .district {
+                           width: 100%;
+                           height: 100%;
+                           background: ${colors[status]}20;
+                           border: 2px solid ${colors[status]};
+                           clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+                           display: flex;
+                           align-items: center;
+                           justify-content: center;
+                           position: relative;
+                           transition: all 0.3s ease;
+                       }
+
+                       .district:hover {
+                           transform: translateY(-5px) scale(1.1);
+                           box-shadow: 0 10px 30px ${colors[status]}40;
+                       }
+
+                       .district::before {
+                           content: '';
+                           position: absolute;
+                           inset: -10px;
+                           background: ${colors[status]};
+                           opacity: 0;
+                           filter: blur(20px);
+                           transition: opacity 0.3s ease;
+                       }
+
+                       .district:hover::before {
+                           opacity: 0.3;
+                       }
+
+                       .label {
+                           font-size: 10px;
+                           font-weight: bold;
+                           color: white;
+                           text-align: center;
+                           z-index: 1;
+                       }
+
+                       .pulse {
+                           position: absolute;
+                           inset: -5px;
+                           border: 1px solid ${colors[status]};
+                           clip-path: inherit;
+                           animation: pulse 2s ease-in-out infinite;
+                       }
+
+                       @keyframes pulse {
+                           0%, 100% { opacity: 0; transform: scale(1); }
+                           50% { opacity: 0.5; transform: scale(1.1); }
+                       }
+                   </style>
+                   <div class="district" @click=${this.handleClick}>
+                       ${status === 'warning' || status === 'critical' ? '<div class="pulse"></div>' : ''}
+                       <span class="label">${name}</span>
+                   </div>
+               `;
+           }
+
+           handleClick = () => {
+               this.dispatchEvent(new CustomEvent('district-click', {
+                   detail: { 
+                       name: this.getAttribute('name'),
+                       status: this.getAttribute('status')
+                   },
+                   bubbles: true,
+                   composed: true
+               }));
+           }
+       }
+
+       // Value Card Component
+       class ValueCard extends CityComponent {
+           static get observedAttributes() {
+               return ['icon', 'label'];
+           }
+
+           render() {
+               const icon = this.getAttribute('icon') || '';
+               const label = this.getAttribute('label') || '';
+               
+               const icons = {
+                   'zoom-out': '🔍',
+                   'zoom-in': '🏢',
+                   'real-time': '⚡',
+                   'actionable': '🎯'
+               };
+
+               this.shadowRoot.innerHTML = `
+                   <style>
+                       :host {
+                           display: block;
+                           text-align: center;
+                           padding: 1.5rem;
+                           background: rgba(10, 10, 15, 0.6);
+                           backdrop-filter: blur(10px);
+                           border: 1px solid rgba(139, 92, 246, 0.2);
+                           border-radius: 0.75rem;
+                           transition: all 0.3s ease;
+                       }
+
+                       :host(:hover) {
+                           transform: translateY(-5px);
+                           border-color: rgba(139, 92, 246, 0.4);
+                           background: rgba(139, 92, 246, 0.1);
+                       }
+
+                       .icon {
+                           font-size: 2rem;
+                           margin-bottom: 0.5rem;
+                       }
+
+                       .label {
+                           font-weight: 600;
+                           color: white;
+                           margin-bottom: 0.25rem;
+                       }
+
+                       .description {
+                           font-size: 0.875rem;
+                           color: #8b8b8b;
+                       }
+                   </style>
+                   <div class="icon">${icons[icon] || icon}</div>
+                   <div class="label">${label}</div>
+                   <div class="description"><slot></slot></div>
+               `;
+           }
+       }
+
+       // Testimonial Card Component
+       class TestimonialCard extends CityComponent {
+           static get observedAttributes() {
+               return ['author', 'role', 'company', 'avatar-gradient'];
+           }
+
+           render() {
+               const author = this.getAttribute('author') || '';
+               const role = this.getAttribute('role') || '';
+               const company = this.getAttribute('company') || '';
+               const gradient = this.getAttribute('avatar-gradient') || 'purple-blue';
+               
+               const gradients = {
+                   'purple-blue': 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
+                   'green-yellow': 'linear-gradient(135deg, #10b981, #facc15)'
+               };
+
+               this.shadowRoot.innerHTML = `
+                   <style>
+                       :host {
+                           display: block;
+                           padding: 1.5rem;
+                           background: rgba(10, 10, 15, 0.6);
+                           backdrop-filter: blur(10px);
+                           border: 1px solid rgba(139, 92, 246, 0.2);
+                           border-radius: 0.75rem;
+                       }
+
+                       .quote {
+                           font-size: 1.125rem;
+                           line-height: 1.6;
+                           color: white;
+                           margin-bottom: 1rem;
+                           font-style: italic;
+                       }
+
+                       .author-info {
+                           display: flex;
+                           align-items: center;
+                           gap: 1rem;
+                       }
+
+                       .avatar {
+                           width: 48px;
+                           height: 48px;
+                           border-radius: 50%;
+                           background: ${gradients[gradient]};
+                       }
+
+                       .author-details {
+                           flex: 1;
+                       }
+
+                       .author-name {
+                           font-weight: 600;
+                           color: white;
+                       }
+
+                       .author-title {
+                           font-size: 0.875rem;
+                           color: #8b8b8b;
+                       }
+                   </style>
+                   <div class="quote">
+                       "<slot></slot>"
+                   </div>
+                   <div class="author-info">
+                       <div class="avatar"></div>
+                       <div class="author-details">
+                           <div class="author-name">${author}</div>
+                           <div class="author-title">${role}, ${company}</div>
+                       </div>
+                   </div>
+               `;
+           }
+       }
+
+       // Register all components
+       customElements.define('company-city-hero', CompanyCityHero);
+       customElements.define('city-nav', CityNav);
+       customElements.define('city-button', CityButton);
+       customElements.define('city-preview', CityPreview);
+       customElements.define('city-layer', CityLayer);
+       customElements.define('city-district', CityDistrict);
+       customElements.define('value-card', ValueCard);
+       customElements.define('testimonial-card', TestimonialCard);
+
+       // Simple text components
+       ['nav-brand', 'nav-menu', 'nav-item', 'nav-actions', 
+        'hero-content', 'text-block', 'action-group',
+        'value-grid', 'testimonial-group', 'trust-metrics', 
+        'metric-item'].forEach(tag => {
+           customElements.define(tag, class extends HTMLElement {
+               constructor() {
+                   super();
+                   this.style.display = this.style.display || 'block';
+               }
+           });
+       });
+
+       // Add connection lines
+       customElements.define('connection-line', class extends CityComponent {
+           render() {
+               this.shadowRoot.innerHTML = `
+                   <style>
+                       :host {
+                           display: block;
+                           position: absolute;
+                           width: 100px;
+                           height: 2px;
+                           background: linear-gradient(90deg, 
+                               transparent 0%, 
+                               rgba(139, 92, 246, 0.5) 50%, 
+                               transparent 100%);
+                           transform-origin: left center;
+                           animation: pulse-line 2s ease-in-out infinite;
+                       }
+
+                       @keyframes pulse-line {
+                           0%, 100% { opacity: 0.3; }
+                           50% { opacity: 0.8; }
+                       }
+                   </style>
+               `;
+           }
+       });
+
+       // Initialize interactions
+       document.addEventListener('district-click', (e) => {
+           console.log('District clicked:', e.detail);
+           // Here you would navigate to the district view
+       });
+   </script>
+</body>
+</html>
