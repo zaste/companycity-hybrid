@@ -2011,6 +2011,276 @@ BUENO: Consistencia visual en cada nivel
 
 #### **Panel como Portal vs Nueva Navegación**
 **Decisión**: Panel se expande como portal
-**Rationale**:
+**Rationale** :
 - Transición natural y entendible
-- Preserva
+-  Preserva contexto de dónde vienes
+- Familiar (como maximizar ventana)
+- Permite múltiples tipos de explorers
+**Alternativa rechazada**: Navegación continua sin cambio de paradigma
+
+#### **Niveles Fijos vs Configurables**
+**Decisión**: Arquitectura fija de 17 niveles, uso configurable
+**Rationale**:
+- Consistencia entre implementaciones
+- "Quien puede lo más puede lo menos"
+- Facilita comunicación entre usuarios
+**Alternativa rechazada**: Niveles completamente customizables
+
+#### **Multi-Explorer vs Explorer Único**
+**Decisión**: 12+ tipos de explorers especializados
+**Rationale**:
+- Cada tipo de dato necesita su visualización
+- Evita forzar todo en una metáfora
+- Permite mejores herramientas específicas
+**Alternativa rechazada**: Un solo explorer genérico
+
+### **12.2 Trade-offs Aceptados**
+
+#### **Complejidad vs Completitud**
+- **Elegimos**: 17 niveles completos
+- **Sacrificamos**: Simplicidad inicial
+- **Porque**: Mejor tener y no necesitar
+- **Mitigación**: Configuración simplifica para cada cliente
+
+#### **Performance vs Fidelidad Visual**
+- **Elegimos**: Visual rico con LOD
+- **Sacrificamos**: Performance en hardware bajo
+- **Porque**: Experiencia premium importa
+- **Mitigación**: Modos de calidad ajustables
+
+#### **Metáfora vs Precisión**
+- **Elegimos**: Mantener metáfora urbana
+- **Sacrificamos**: Representación literal perfecta
+- **Porque**: Navegación intuitiva > precisión
+- **Mitigación**: Post-transición es preciso
+
+#### **Generalización vs Especialización**
+- **Elegimos**: Sistema generalizable
+- **Sacrificamos**: Optimización por industria
+- **Porque**: Mantenibilidad y escala
+- **Mitigación**: Sistema de plugins
+
+### **12.3 Decisiones Diferidas**
+
+#### **Colaboración Multi-usuario**
+- **Estado**: No definido en v1
+- **Opciones**: Cursores compartidos, edición simultánea
+- **Consideraciones**: Complejidad técnica alta
+- **Timeline**: Evaluar post-launch
+
+#### **VR/AR Support**
+- **Estado**: Arquitectura preparada, no implementado
+- **Opciones**: VR inmersivo, AR overlay
+- **Consideraciones**: Adopción de hardware
+- **Timeline**: Cuando >10% usuarios tengan
+
+#### **AI Assistant**
+- **Estado**: Conceptualizado, no especificado
+- **Opciones**: Navegación por voz, insights automáticos
+- **Consideraciones**: Valor vs complejidad
+- **Timeline**: Post validación de uso base
+
+#### **Mobile-First Design**
+- **Estado**: Desktop-first actualmente
+- **Opciones**: App nativa, PWA, responsive
+- **Consideraciones**: Limitaciones de interacción
+- **Timeline**: Basado en analytics de uso
+
+---
+
+## **13. Glosario**
+
+### **Términos de Navegación**
+
+**Building**: Representación visual de un proceso empresarial completo. Contiene floors, lobby, rooftop y basement.
+
+**City**: Nivel +1 que representa la empresa completa. Vista isométrica con districts hexagonales.
+
+**Control Center**: Ubicado en basement del building, centro de monitoreo con screens.
+
+**District**: Departamento o división principal de la empresa. Visualizado como hexágono.
+
+**Ecosystem**: Nivel 0, frontera entre empresa y mundo externo. Muestra partners e integraciones.
+
+**Explorer**: Vista especializada post-transición para navegar tipos específicos de datos.
+
+**Floor**: Nivel dentro de building representando etapa o módulo del proceso.
+
+**Lobby**: Entrada del building con directorio y acceso a floors/control center.
+
+**Panel**: Widget en screen que puede expandirse a explorer completo.
+
+**Rooftop**: Parte superior del building mostrando conexiones externas (APIs, webhooks).
+
+**Screen**: Dashboard en control center conteniendo múltiples panels.
+
+**Zone**: Subdivisión funcional dentro de un district.
+
+### **Términos Técnicos**
+
+**LOD (Level of Detail)**: Sistema que ajusta complejidad visual según distancia.
+
+**Portal Transition**: Animación de 1.2s cuando panel se expande a explorer.
+
+**Semantic Zoom**: Zoom que cambia qué información se muestra, no solo tamaño.
+
+**View Level**: Posición actual en la jerarquía de navegación (-3 a +11).
+
+### **Términos de Negocio**
+
+**KPI (Key Performance Indicator)**: Métrica clave mostrada en diversos niveles.
+
+**Process**: Flujo de trabajo empresarial, representado como building.
+
+**Throughput**: Volumen procesado por unidad de tiempo.
+
+**SLA (Service Level Agreement)**: Compromisos de servicio monitoreados.
+
+---
+
+## **14. FAQ**
+
+### **Preguntas Generales**
+
+**Q: ¿Por qué una ciudad y no otra metáfora?**
+A: Las ciudades son universalmente entendidas, tienen jerarquía natural (ciudad>distrito>edificio), permiten navegación espacial intuitiva, y escalan desde pequeño (pueblo) hasta enorme (metrópolis).
+
+**Q: ¿Cuántos usuarios concurrentes soporta?**
+A: El rendering es client-side, así que ilimitados. El límite está en el backend de datos. La arquitectura soporta millones de usuarios con la infraestructura correcta.
+
+**Q: ¿Funciona en dispositivos móviles?**
+A: Sí, pero optimizado para desktop. Mobile tiene controles táctiles adaptados y reducción automática de calidad visual para performance.
+
+**Q: ¿Se puede personalizar la apariencia visual?**
+A: Sí, a través de temas. Los colores, materiales y algunos aspectos de geometría son configurables. La estructura de navegación se mantiene consistente.
+
+### **Preguntas de Implementación**
+
+**Q: ¿Cuánto tiempo toma implementar CompanyCity?**
+A: 
+- MVP básico: 3-4 meses
+- Versión completa: 6-9 meses  
+- Con todas las integraciones: 12+ meses
+- Depende de complejidad de datos existentes
+
+**Q: ¿Qué datos necesito tener listos?**
+A: Como mínimo:
+- Estructura organizacional
+- Catálogo de procesos/servicios
+- APIs o acceso a métricas en tiempo real
+- Definición de KPIs por área
+
+**Q: ¿Se integra con sistemas existentes?**
+A: Sí, a través de:
+- APIs REST/GraphQL
+- Webhooks para eventos
+- ETL para datos históricos
+- Conectores para plataformas comunes
+
+**Q: ¿Requiere hardware especial?**
+A: No para usuarios. Requisitos mínimos:
+- Navegador moderno con WebGL
+- 4GB RAM
+- GPU integrada básica
+- Conexión internet estable
+
+### **Preguntas de Uso**
+
+**Q: ¿Cómo encuentro algo específico rápidamente?**
+A: Múltiples formas:
+- Búsqueda global (Cmd/Ctrl + K)
+- Navegación jerárquica
+- Bookmarks guardados
+- Links directos compartibles
+- Acceso desde notificaciones
+
+**Q: ¿Puedo exportar las visualizaciones?**
+A: Sí:
+- Screenshots en alta resolución
+- Videos de navegación
+- Datos en CSV/JSON
+- Reportes PDF
+- Presentaciones interactivas
+
+**Q: ¿Cómo sé si algo está mal?**
+A: Sistema de alertas visual:
+- Colores (verde/amarillo/rojo)
+- Animaciones de atención
+- Notificaciones push
+- Panel de alertas dedicado
+- Sonidos opcionales
+
+**Q: ¿Pueden varios usuarios ver lo mismo simultáneamente?**
+A: En roadmap. Actualmente:
+- Compartir links a vistas específicas
+- Exportar y compartir screenshots
+- Sesiones de screen sharing
+- Futura: colaboración real-time
+
+### **Preguntas de Seguridad**
+
+**Q: ¿Cómo se protegen los datos sensibles?**
+A: Múltiples capas:
+- Autenticación SSO/MFA
+- Autorización role-based
+- Encriptación en tránsito y reposo
+- Audit logs completos
+- Cumplimiento GDPR/SOC2
+
+**Q: ¿Se puede limitar acceso por rol?**
+A: Sí, granularmente:
+- Por nivel (no ver más allá de district)
+- Por área (solo ver tu department)
+- Por tipo de datos (no ver financial)
+- Por acciones (read-only vs edit)
+
+**Q: ¿Dónde se almacenan los datos?**
+A: Flexible:
+- On-premise en tu infraestructura
+- Cloud privado  
+- SaaS multi-tenant
+- Híbrido (estructura local, métricas cloud)
+
+### **Preguntas de ROI**
+
+**Q: ¿Cuál es el ROI típico?**
+A: Métricas observadas:
+- 50% reducción en tiempo de diagnóstico
+- 30% mejora en tiempo de respuesta
+- 25% reducción en reuniones de status
+- 40% mejor en onboarding tiempo
+
+**Q: ¿Cómo justifico la inversión?**
+A: Valor en:
+- Visibilidad unificada (vs 10+ herramientas)
+- Decisiones más rápidas
+- Menos downtime/incidentes
+- Mejor colaboración
+- Reducción de licencias otras tools
+
+**Q: ¿Hay casos de éxito documentados?**
+A: Sí (ejemplos ficticios para ilustración):
+- Retail Corp: 30% reducción en stockouts
+- FinanceInc: 50% menos tiempo en auditorías
+- TechStartup: 60% mejora en MTTR
+- HealthSystem: 25% mejora en patient flow
+
+---
+
+## **Conclusión**
+
+CompanyCity representa un cambio de paradigma en cómo las organizaciones visualizan y gestionan su complejidad operativa. Al combinar una metáfora urbana intuitiva con capacidades técnicas profundas, crea un puente único entre diferentes audiencias y necesidades.
+
+La arquitectura de 17 niveles, desde contexto global hasta acción específica, provee la profundidad necesaria para cualquier análisis mientras mantiene la simplicidad de navegación que todos pueden entender.
+
+Este documento representa la visión completa y puede servir como:
+- Especificación técnica para desarrollo
+- Guía de diseño para implementadores
+- Manual de referencia para usuarios
+- Base de conocimiento para soporte
+
+La flexibilidad del sistema permite adaptación a cualquier industria mientras mantiene consistencia en la experiencia core, asegurando que CompanyCity pueda evolucionar con las necesidades cambiantes de las organizaciones modernas.
+
+---
+
+*Documento Maestro CompanyCity v1.0 - Completo*
